@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'screens/caregiver_dashboard.dart';
+import 'screens/patient_details.dart';
+import 'screens/caregiver_details.dart';
 
 void main() {
   runApp(const CareNestApp());
 }
 
 class CareNestApp extends StatelessWidget {
-  const CareNestApp({Key? key}) : super(key: key);
+  const CareNestApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +15,7 @@ class CareNestApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'CareNest',
       theme: ThemeData(primarySwatch: Colors.teal),
-      home: const CaregiverDashboard(),
+      home: PatientDetailsPage(),
     );
   }
 }
