@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'screens/patient/patient_details.dart';
-import 'screens/caregiver/caregiver_details.dart';
-import 'screens/caregiver/caregiver_notification_page.dart';
 
 void main() {
   runApp(const CareNestApp());
