@@ -1,6 +1,6 @@
 {
-    "name": "carenest_mobile",
-    "short_name": "carenest_mobile",
+    "name": "carenest_mobileapp",
+    "short_name": "carenest_mobileapp",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
