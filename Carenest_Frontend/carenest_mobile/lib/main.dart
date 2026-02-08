@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 
 import 'core/role_storage.dart';
 import 'core/user_role.dart';
@@ -6,6 +7,9 @@ import 'core/user_role.dart';
 import 'pages/role_select_page.dart';
 import 'pages/caregiver_dashboard_page.dart';
 import 'pages/carereceiver_dashboard_page.dart';
+=======
+import 'screens/patient/patient_details.dart';
+>>>>>>> AyumiNewBranch
 
 void main() {
   runApp(const CareNestApp());
