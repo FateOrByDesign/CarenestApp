@@ -61,7 +61,7 @@ class _PatientNotificationsPageState extends State<PatientNotificationsPage> {
         ],
       ),
 
-      // ================= BOTTOM NAVIGATION =================
+      // ================= BOTTOM NAVIGATION ==============
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _bottomIndex,
         onTap: (index) {
