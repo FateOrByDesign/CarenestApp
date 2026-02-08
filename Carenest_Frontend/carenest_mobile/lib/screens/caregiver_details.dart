@@ -19,40 +19,56 @@ class _CaregiverDetailsPageState extends State<CaregiverDetailsPage> {
     return Scaffold(
       backgroundColor: bgColor,
 
-      body: CustomScrollView(
-        slivers: [
+      body: Column(
+        children: [
           // ================= HEADER IMAGE =================
-          SliverAppBar(
-            expandedHeight: 260,
-            pinned: true,
-            backgroundColor: Colors.white,
-            leading: _circleIcon(Icons.arrow_back, () {
-              Navigator.pop(context);
-            }),
-            actions: [
-              _circleIcon(Icons.favorite_border, () {}),
-              const SizedBox(width: 12),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Image.asset(
+          Stack(
+            children: [
+              Image.asset(
                 'assets/images/caregiver_header.jpg',
+                height: 260,
+                width: double.infinity,
                 fit: BoxFit.cover,
               ),
-            ),
+
+              // Back button
+              Positioned(
+                top: 40,
+                left: 16,
+                child: _circleIcon(Icons.arrow_back, () {
+                  Navigator.pop(context);
+                }),
+              ),
+
+              // Favorite button
+              Positioned(
+                top: 40,
+                right: 16,
+                child: _circleIcon(Icons.favorite_border, () {}),
+              ),
+            ],
           ),
 
-          // ================= CONTENT =================
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _infoCard(),
-                  const SizedBox(height: 20),
-                  _tabs(),
-                  const SizedBox(height: 16),
+          // ================= FIXED INFO CARD =================
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: _infoCard(),
+          ),
 
+          // ================= TABS (FIXED) =================
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _tabs(),
+          ),
+
+          const SizedBox(height: 12),
+
+          // ================= SCROLLABLE CONTENT =================
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
                   if (selectedTab == 0) ...[
                     _servicesCard(),
                     const SizedBox(height: 16),
@@ -60,6 +76,18 @@ class _CaregiverDetailsPageState extends State<CaregiverDetailsPage> {
                     const SizedBox(height: 16),
                     _verificationCard(),
                   ],
+
+                  if (selectedTab == 1)
+                    _sectionCard('Experience', const [
+                      '5+ years caregiving experience',
+                      'Worked in hospital & home care',
+                    ]),
+
+                  if (selectedTab == 2)
+                    _sectionCard('Reviews', const [
+                      'Very kind and professional',
+                      'Highly recommended caregiver',
+                    ]),
                 ],
               ),
             ),
@@ -71,7 +99,6 @@ class _CaregiverDetailsPageState extends State<CaregiverDetailsPage> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // BOOK BUTTON
           Padding(
             padding: const EdgeInsets.all(12),
             child: SizedBox(
@@ -93,7 +120,6 @@ class _CaregiverDetailsPageState extends State<CaregiverDetailsPage> {
             ),
           ),
 
-          // NAV BAR
           BottomNavigationBar(
             currentIndex: bottomIndex,
             onTap: (i) => setState(() => bottomIndex = i),
