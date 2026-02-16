@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../core/app_theme.dart'; // importing the custom theme 
+import '../core/app_theme.dart'; // Import the "CSS" file
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,24 +9,24 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Key to track the form state (for validation)
+  // 1. Key to track the form state (for validation)
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers to capture user typing
+  // 2. Controllers to capture user typing
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
 
   bool _isObscure = true; // To toggle password visibility
 
   void _handleLogin() {
-    // Check if the form is valid (Calls the 'validator' functions below)
+    // A. Check if the form is valid (Calls the 'validator' functions below)
     if (_formKey.currentState!.validate()) {
 
-      // Simulate a successful login action
+      // B. Simulate a successful login action
       print("Email is valid: ${_emailController.text}");
       print("Password: ${_passController.text}");
 
-      // Navigate to the Gatekeeper (which decides Caregiver vs Patient)
+      // C. Navigate to the Gatekeeper (which decides Caregiver vs Patient)
       Navigator.pushReplacementNamed(context, '/dashboard_gate');
     }
   }
@@ -34,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Use the background color from the Theme
+      // Use the background color from your Theme
       backgroundColor: AppTheme.background,
 
       body: SafeArea(
@@ -47,27 +47,28 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo/Icon at the top (using a built-in icon for simplicity)
-                  const Icon(
-                    Icons.health_and_safety,
-                    size: 80,
-                    color: AppTheme.primary, // Uses Teal color
-                  ),
+                  // --- LOGO / HEADER ---
+                  Image.asset('../assets/images/logo_black.png', height: 100, errorBuilder: (context, error, stack) {
+                    // Fallback if logo isn't added yet
+                    return const Icon(Icons.favorite, size: 80, color: AppTheme.primaryDark);
+                  }),
+                  Image.asset('../assets/images/typo_black.png', height: 30),
+
                   const SizedBox(height: 24),
 
                   Text(
                     "Welcome Back",
                     textAlign: TextAlign.center,
-                    style: AppTheme.headingLarge, // Uses Poppins Bold
+                    style: AppTheme.headingLarge, // Uses your Poppins Bold
                   ),
                   Text(
                     "Sign in to continue to CareNest",
                     textAlign: TextAlign.center,
-                    style: AppTheme.bodyText, // Uses Grey Inter text
+                    style: AppTheme.bodyText, // Uses your Grey Inter text
                   ),
                   const SizedBox(height: 40),
 
-                  // Email Input Field
+                  // --- EMAIL INPUT ---
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -90,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Password Input with visibility toggle
+                  // --- PASSWORD INPUT ---
                   TextFormField(
                     controller: _passController,
                     obscureText: _isObscure,
@@ -119,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
 
-                  // Forgot Password Link
+                  // --- FORGOT PASSWORD ---
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -135,22 +136,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Login Button (uses the ElevatedButton style from AppTheme)
+                  // --- LOGIN BUTTON ---
                   ElevatedButton(
                     onPressed: _handleLogin,
-                    // The style is automatically pulled from AppTheme
-                    child: const Text("Login"),
+                    // The style is automatically pulled from AppTheme!
+                    child: const Text("Login", style: TextStyle(fontSize: 15)),
                   ),
 
                   const SizedBox(height: 24),
 
-                  // Registration Link
+                  // --- REGISTER LINK ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text("Don't have an account? ", style: AppTheme.bodyText),
                       GestureDetector(
-                        // Navigate to the Role Selection page for new users
                         onTap: () => Navigator.pushNamed(context, '/role_select'),
                         child: Text(
                           "Sign Up",
