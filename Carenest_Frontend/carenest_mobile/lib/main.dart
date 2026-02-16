@@ -1,59 +1,61 @@
 import 'package:flutter/material.dart';
+// main screens
+import 'screens/login_screen.dart';
+import 'screens/splash_screen.dart';
+import 'screens/reset_password_screen.dart';
+// patient screens
+import 'screens/patient/patient_register_page.dart';
+import 'screens/patient/patient_profile_page.dart';
+import 'screens/patient/carereceiver_dashboard_page.dart';
 import 'screens/patient/patient_details.dart';
+import 'screens/patient/request_caregiver.dart';
+// caregiver screens
+import 'screens/caregiver/caregiver_register_page.dart';
+import 'screens/caregiver/caregiver_profile_page.dart';
+import 'screens/caregiver/caregiver_dashboard_page.dart';
 import 'screens/caregiver/caregiver_details.dart';
-import 'screens/caregiver/caregiver_notification_page.dart';
+import 'screens/caregiver/update_caregiver_status.dart';
+// common screens
+import 'pages/role_select_page.dart';
 
 void main() {
   runApp(const CareNestApp());
 }
-
 class CareNestApp extends StatelessWidget {
   const CareNestApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      title: 'CareNest',
+      theme: ThemeData(
+        primarySwatch: Colors.teal,
+      ),
       debugShowCheckedModeBanner: false,
-      home: _StartupGate(),
-    );
-  }
-}
+      
+      // --- Initial Route ---
+      initialRoute: '/',
 
-class _StartupGate extends StatelessWidget {
-  const _StartupGate();
+      routes: {
+        '/': (context) => const SplashScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/reset-password': (context) => const ResetPasswordScreen(),
+        '/select-role': (context) => const RoleSelectPage(),
 
-  // @override
-  // Widget build(BuildContext context) {
-  //   return FutureBuilder<UserRole?>(
-  //     future: RoleStorage.getRole(),
-  //     builder: (context, snapshot) {
-  //       // Loading state
-  //       if (snapshot.connectionState == ConnectionState.waiting) {
-  //         return const Scaffold(
-  //           body: Center(child: CircularProgressIndicator()),
-  //         );
-  //       }
+        // --- Patient Routes ---
+        '/patient/register': (context) => const RegisterPatientScreen(),
+        '/patient/profile': (context) => const PatientProfilePage(),
+        '/patient/dashboard': (context) => const CareReceiverDashboardPage(),
+        '/patient/details': (context) => const PatientDetailsPage(),
+        '/patient/request-caregiver': (context) => const RequestCarePage(),
 
-  //       final role = snapshot.data;
-
-  //       if (role == UserRole.caregiver) {
-  //         return const CaregiverDashboardPage();
-  //       }
-
-  //       if (role == UserRole.careReceiver) {
-  //         return const CareReceiverDashboardPage();
-  //       }
-
-  //       return const RoleSelectPage();
-  //     },
-  //   );
-  // }
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: RoleSelectPage(),
+        // --- Caregiver Routes ---
+        '/caregiver/register': (context) => const RegisterCaregiverScreen(),
+        '/caregiver/profile': (context) => const CareGiverProfilePage(),
+        '/caregiver/dashboard': (context) => const CaregiverDashboardPage(),
+        '/caregiver/details': (context) => const CaregiverDetailsPage(),
+       // '/caregiver/update-status': (context) => const UpdateCareStatusPage(),
+      },
     );
   }
 }
