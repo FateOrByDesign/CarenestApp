@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:carenest_mobile/core/app_theme.dart'; // ✅ Your existing AppTheme
 
 void main() {
   runApp(const MyApp());
@@ -12,10 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Schedule Page',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
-      ),
+      theme: AppTheme.themeData, // ✅ Uses your AppTheme
       home: const SchedulePage(),
     );
   }
@@ -28,7 +26,8 @@ class SchedulePage extends StatefulWidget {
   State<SchedulePage> createState() => _SchedulePageState();
 }
 
-class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderStateMixin {
+class _SchedulePageState extends State<SchedulePage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   DateTime selectedDate = DateTime.now();
 
@@ -48,7 +47,7 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF38B2AC),
+        backgroundColor: AppTheme.primary, // ✅ AppTheme color
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -75,7 +74,7 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
-            color: const Color(0xFF38B2AC),
+            color: AppTheme.primary, // ✅ AppTheme color
             child: TabBar(
               controller: _tabController,
               indicatorColor: Colors.white,
@@ -103,7 +102,7 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},
-        backgroundColor: const Color(0xFF38B2AC),
+        backgroundColor: AppTheme.primary, // ✅ AppTheme color
         icon: const Icon(Icons.add),
         label: const Text(
           'Add Visit',
@@ -113,11 +112,12 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
     );
   }
 
+  // ── Daily Schedule ───────────────────────────────────────────────
   Widget _buildDailySchedule() {
     return SingleChildScrollView(
       child: Column(
         children: [
-          // Date selector
+          // Date selector strip
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -135,18 +135,21 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
               ),
             ),
           ),
-          
+
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Summary card
+                // Summary gradient card
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF38B2AC), Color(0xFF2C7A7B)],
+                      colors: [
+                        AppTheme.primary,     // ✅ AppTheme color
+                        AppTheme.primaryDark, // ✅ AppTheme color
+                      ],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -163,61 +166,26 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
                 ),
                 const SizedBox(height: 24),
 
-                // Morning section
+                // Morning
                 _buildTimeSection('Morning', '8:00 AM - 12:00 PM'),
                 const SizedBox(height: 12),
-                _buildVisitCard(
-                  'Mr. J. Perera',
-                  'Colombo 06',
-                  '8:00 AM - 9:00 AM',
-                  '3.5 km away',
-                  'completed',
-                  'General checkup and medication review',
-                ),
+                _buildVisitCard('Mr. J. Perera',       'Colombo 06', '8:00 AM - 9:00 AM',   '3.5 km away', 'completed', 'General checkup and medication review'),
                 const SizedBox(height: 8),
-                _buildVisitCard(
-                  'Mrs. K. Silva',
-                  'Colombo 03',
-                  '10:00 AM - 11:00 AM',
-                  '5.2 km away',
-                  'completed',
-                  'Post-surgery care and wound dressing',
-                ),
+                _buildVisitCard('Mrs. K. Silva',        'Colombo 03', '10:00 AM - 11:00 AM', '5.2 km away', 'completed', 'Post-surgery care and wound dressing'),
                 const SizedBox(height: 24),
 
-                // Afternoon section
+                // Afternoon
                 _buildTimeSection('Afternoon', '12:00 PM - 5:00 PM'),
                 const SizedBox(height: 12),
-                _buildVisitCard(
-                  'Mr. R. Fernando',
-                  'Colombo 04',
-                  '2:00 PM - 3:00 PM',
-                  '2.8 km away',
-                  'upcoming',
-                  'Diabetes management and insulin check',
-                ),
+                _buildVisitCard('Mr. R. Fernando',      'Colombo 04', '2:00 PM - 3:00 PM',   '2.8 km away', 'upcoming',  'Diabetes management and insulin check'),
                 const SizedBox(height: 8),
-                _buildVisitCard(
-                  'Mrs. A. Dissanayake',
-                  'Colombo 05',
-                  '4:00 PM - 5:00 PM',
-                  '4.1 km away',
-                  'upcoming',
-                  'Physical therapy session',
-                ),
+                _buildVisitCard('Mrs. A. Dissanayake',  'Colombo 05', '4:00 PM - 5:00 PM',   '4.1 km away', 'upcoming',  'Physical therapy session'),
                 const SizedBox(height: 24),
 
-                // Evening section
+                // Evening
                 _buildTimeSection('Evening', '5:00 PM - 8:00 PM'),
                 const SizedBox(height: 12),
-                _buildVisitCard(
-                  'Mr. S. Wickramasinghe',
-                  'Colombo 07',
-                  '6:00 PM - 7:00 PM',
-                  '6.5 km away',
-                  'upcoming',
-                  'Blood pressure monitoring',
-                ),
+                _buildVisitCard('Mr. S. Wickramasinghe','Colombo 07', '6:00 PM - 7:00 PM',   '6.5 km away', 'upcoming',  'Blood pressure monitoring'),
                 const SizedBox(height: 80),
               ],
             ),
@@ -227,45 +195,44 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
     );
   }
 
+  // ── Weekly Schedule ──────────────────────────────────────────────
   Widget _buildWeeklySchedule() {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _buildWeekDayCard('Monday, Feb 8', 5, 3, 2),
+        _buildWeekDayCard('Monday, Feb 8',    5, 3, 2),
         const SizedBox(height: 12),
-        _buildWeekDayCard('Tuesday, Feb 9', 4, 0, 4),
+        _buildWeekDayCard('Tuesday, Feb 9',   4, 0, 4),
         const SizedBox(height: 12),
-        _buildWeekDayCard('Wednesday, Feb 10', 6, 0, 6),
+        _buildWeekDayCard('Wednesday, Feb 10',6, 0, 6),
         const SizedBox(height: 12),
         _buildWeekDayCard('Thursday, Feb 11', 3, 0, 3),
         const SizedBox(height: 12),
-        _buildWeekDayCard('Friday, Feb 12', 7, 0, 7),
+        _buildWeekDayCard('Friday, Feb 12',   7, 0, 7),
         const SizedBox(height: 12),
         _buildWeekDayCard('Saturday, Feb 13', 2, 0, 2),
         const SizedBox(height: 12),
-        _buildWeekDayCard('Sunday, Feb 14', 0, 0, 0),
+        _buildWeekDayCard('Sunday, Feb 14',   0, 0, 0),
         const SizedBox(height: 80),
       ],
     );
   }
 
+  // ── Helper Widgets ───────────────────────────────────────────────
+
   Widget _buildDateCard(DateTime date, bool isSelected) {
     final dayName = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][date.weekday - 1];
-    
+
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedDate = date;
-        });
-      },
+      onTap: () => setState(() => selectedDate = date),
       child: Container(
         width: 60,
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF38B2AC) : Colors.grey[100],
+          color: isSelected ? AppTheme.primary : Colors.grey[100], // ✅ AppTheme color
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF38B2AC) : Colors.grey[300]!,
+            color: isSelected ? AppTheme.primary : Colors.grey[300]!, // ✅ AppTheme color
             width: 2,
           ),
         ),
@@ -286,7 +253,7 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : const Color(0xFF2D3748),
+                color: isSelected ? Colors.white : AppTheme.textDark, // ✅ AppTheme color
               ),
             ),
             const SizedBox(height: 2),
@@ -295,7 +262,7 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
                 width: 6,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.white : const Color(0xFF38B2AC),
+                  color: isSelected ? Colors.white : AppTheme.primary, // ✅ AppTheme color
                   shape: BoxShape.circle,
                 ),
               ),
@@ -318,13 +285,7 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
             fontWeight: FontWeight.bold,
           ),
         ),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-          ),
-        ),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
       ],
     );
   }
@@ -336,27 +297,14 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
           width: 4,
           height: 20,
           decoration: BoxDecoration(
-            color: const Color(0xFF38B2AC),
+            color: AppTheme.primary, // ✅ AppTheme color
             borderRadius: BorderRadius.circular(2),
           ),
         ),
         const SizedBox(width: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3748),
-          ),
-        ),
+        Text(title, style: AppTheme.headingMedium), // ✅ AppTheme text style
         const SizedBox(width: 8),
-        Text(
-          time,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-          ),
-        ),
+        Text(time, style: AppTheme.bodySmall),       // ✅ AppTheme text style
       ],
     );
   }
@@ -369,6 +317,7 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
     String status,
     String description,
   ) {
+    // Status config
     Color statusColor;
     String statusText;
     IconData statusIcon;
@@ -376,23 +325,23 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
     switch (status) {
       case 'completed':
         statusColor = Colors.green;
-        statusText = 'Completed';
-        statusIcon = Icons.check_circle;
+        statusText  = 'Completed';
+        statusIcon  = Icons.check_circle;
         break;
       case 'upcoming':
         statusColor = Colors.orange;
-        statusText = 'Upcoming';
-        statusIcon = Icons.schedule;
+        statusText  = 'Upcoming';
+        statusIcon  = Icons.schedule;
         break;
       case 'in_progress':
         statusColor = Colors.blue;
-        statusText = 'In Progress';
-        statusIcon = Icons.play_circle;
+        statusText  = 'In Progress';
+        statusIcon  = Icons.play_circle;
         break;
       default:
         statusColor = Colors.grey;
-        statusText = 'Pending';
-        statusIcon = Icons.pending;
+        statusText  = 'Pending';
+        statusIcon  = Icons.pending;
     }
 
     return Container(
@@ -412,60 +361,39 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Patient row
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE6FFFA),
+                  color: AppTheme.primaryLight,          // ✅ AppTheme color
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.person,
-                  color: Color(0xFF38B2AC),
-                  size: 24,
-                ),
+                child: const Icon(Icons.person, color: AppTheme.primary, size: 24), // ✅ AppTheme color
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      patientName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2D3748),
-                      ),
-                    ),
+                    Text(patientName, style: AppTheme.bodyMedium), // ✅ AppTheme text style
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                        Icon(Icons.location_on,    size: 14, color: Colors.grey[600]),
                         const SizedBox(width: 4),
-                        Text(
-                          location,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[600],
-                          ),
-                        ),
+                        Text(location, style: AppTheme.bodySmall), // ✅ AppTheme text style
                         const SizedBox(width: 8),
                         Icon(Icons.directions_walk, size: 14, color: Colors.grey[600]),
                         const SizedBox(width: 4),
-                        Text(
-                          distance,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[600],
-                          ),
-                        ),
+                        Text(distance, style: AppTheme.bodySmall), // ✅ AppTheme text style
                       ],
                     ),
                   ],
                 ),
               ),
+              // Status badge
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
@@ -491,6 +419,8 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
             ],
           ),
           const SizedBox(height: 12),
+
+          // Time chip
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
@@ -513,6 +443,8 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
             ),
           ),
           const SizedBox(height: 8),
+
+          // Description
           Text(
             description,
             style: TextStyle(
@@ -522,6 +454,8 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
             ),
           ),
           const SizedBox(height: 12),
+
+          // Action buttons — auto-styled by AppTheme.themeData ✅
           Row(
             children: [
               Expanded(
@@ -530,12 +464,10 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
                   icon: const Icon(Icons.directions, size: 18),
                   label: const Text('Navigate'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF38B2AC),
-                    side: const BorderSide(color: Color(0xFF38B2AC)),
+                    foregroundColor: AppTheme.primary,                    // ✅ AppTheme color
+                    side: const BorderSide(color: AppTheme.primary),      // ✅ AppTheme color
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
               ),
@@ -546,12 +478,10 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
                   icon: const Icon(Icons.play_arrow, size: 18),
                   label: Text(status == 'completed' ? 'View' : 'Start Visit'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF38B2AC),
+                    backgroundColor: AppTheme.primary,   // ✅ AppTheme color
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     elevation: 0,
                   ),
                 ),
@@ -565,14 +495,14 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
 
   Widget _buildWeekDayCard(String day, int totalVisits, int completed, int pending) {
     final hasVisits = totalVisits > 0;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: hasVisits ? const Color(0xFF38B2AC) : Colors.grey[200]!,
+          color: hasVisits ? AppTheme.primary : Colors.grey[200]!, // ✅ AppTheme color
           width: hasVisits ? 2 : 1,
         ),
         boxShadow: [
@@ -590,7 +520,7 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
             children: [
               Icon(
                 Icons.calendar_today,
-                color: hasVisits ? const Color(0xFF38B2AC) : Colors.grey[400],
+                color: hasVisits ? AppTheme.primary : Colors.grey[400], // ✅ AppTheme color
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -600,7 +530,7 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: hasVisits ? const Color(0xFF2D3748) : Colors.grey[600],
+                    color: hasVisits ? AppTheme.textDark : Colors.grey[600], // ✅ AppTheme color
                   ),
                 ),
               ),
@@ -608,16 +538,12 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE6FFFA),
+                    color: AppTheme.primaryLight,           // ✅ AppTheme color
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     '$totalVisits visits',
-                    style: const TextStyle(
-                      color: Color(0xFF38B2AC),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
+                    style: AppTheme.primaryLabel,           // ✅ AppTheme text style
                   ),
                 ),
             ],
@@ -633,15 +559,11 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
             ),
             const SizedBox(height: 12),
             TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  _tabController.index = 0;
-                });
-              },
+              onPressed: () => setState(() => _tabController.index = 0),
               icon: const Icon(Icons.visibility, size: 16),
               label: const Text('View Schedule'),
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF38B2AC),
+                foregroundColor: AppTheme.primary, // ✅ AppTheme color
                 padding: EdgeInsets.zero,
               ),
             ),
@@ -671,22 +593,9 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '$count',
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
+          Text('$count', style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-            ),
-          ),
+          Text(label,   style: TextStyle(color: color, fontSize: 12)),
         ],
       ),
     );
@@ -702,9 +611,9 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF38B2AC),
+              primary: AppTheme.primary,    // ✅ AppTheme color
               onPrimary: Colors.white,
-              onSurface: Color(0xFF2D3748),
+              onSurface: AppTheme.textDark, // ✅ AppTheme color
             ),
           ),
           child: child!,
@@ -712,9 +621,7 @@ class _SchedulePageState extends State<SchedulePage> with SingleTickerProviderSt
       },
     );
     if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-      });
+      setState(() => selectedDate = picked);
     }
   }
 }
