@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:carenest_mobile/core/app_theme.dart'; // ✅ Your existing AppTheme
 
 void main() {
   runApp(const MyApp());
@@ -12,10 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Patient Profile',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
-      ),
+      theme: AppTheme.themeData, // ✅ Uses your AppTheme
       home: const PatientProfilePage(),
     );
   }
@@ -29,24 +27,18 @@ class PatientProfilePage extends StatelessWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // App Bar with patient header
+          // ── App Bar ──────────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 280,
             pinned: true,
-            backgroundColor: const Color(0xFF38B2AC),
+            backgroundColor: AppTheme.primary, // ✅ AppTheme color
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () {},
             ),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.edit, color: Colors.white),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: const Icon(Icons.more_vert, color: Colors.white),
-                onPressed: () {},
-              ),
+              IconButton(icon: const Icon(Icons.edit, color: Colors.white),     onPressed: () {}),
+              IconButton(icon: const Icon(Icons.more_vert, color: Colors.white), onPressed: () {}),
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
@@ -55,8 +47,8 @@ class PatientProfilePage extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Color(0xFF38B2AC),
-                      Color(0xFF2C7A7B),
+                      AppTheme.primary,     // ✅ AppTheme color
+                      AppTheme.primaryDark, // ✅ AppTheme color
                     ],
                   ),
                 ),
@@ -78,27 +70,15 @@ class PatientProfilePage extends StatelessWidget {
                       ),
                       child: const CircleAvatar(
                         radius: 50,
-                        backgroundImage: NetworkImage(
-                          'https://via.placeholder.com/150',
-                        ),
+                        backgroundImage: NetworkImage('https://via.placeholder.com/150'),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Mr. J. Perera',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    const Text('Mr. J. Perera', style: AppTheme.headingLarge), // ✅ AppTheme text style
                     const SizedBox(height: 4),
                     Text(
                       'Patient ID: #PT12345',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -117,14 +97,15 @@ class PatientProfilePage extends StatelessWidget {
             ),
           ),
 
-          // Content
+          // ── Body Content ─────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Action buttons
+
+                  // Action buttons — auto-styled by AppTheme.themeData ✅
                   Row(
                     children: [
                       Expanded(
@@ -133,12 +114,10 @@ class PatientProfilePage extends StatelessWidget {
                           icon: const Icon(Icons.phone),
                           label: const Text('Call'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF38B2AC),
+                            backgroundColor: AppTheme.primary, // ✅ AppTheme color
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             elevation: 0,
                           ),
                         ),
@@ -150,15 +129,10 @@ class PatientProfilePage extends StatelessWidget {
                           icon: const Icon(Icons.message),
                           label: const Text('Message'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF38B2AC),
-                            side: const BorderSide(
-                              color: Color(0xFF38B2AC),
-                              width: 2,
-                            ),
+                            foregroundColor: AppTheme.primary,                   // ✅ AppTheme color
+                            side: const BorderSide(color: AppTheme.primary, width: 2), // ✅ AppTheme color
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
                       ),
@@ -167,111 +141,91 @@ class PatientProfilePage extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Personal Information
-                  _buildSectionTitle('Personal Information'),
+                  const Text('Personal Information', style: AppTheme.headingMedium), // ✅ AppTheme text style
                   const SizedBox(height: 12),
                   _buildInfoCard([
-                    _buildInfoRow(Icons.person, 'Full Name', 'Jayantha Perera'),
-                    _buildInfoRow(Icons.cake, 'Date of Birth', 'January 15, 1979'),
-                    _buildInfoRow(Icons.phone, 'Phone', '+94 77 123 4567'),
-                    _buildInfoRow(Icons.email, 'Email', 'j.perera@email.com'),
-                    _buildInfoRow(Icons.location_on, 'Address', 'No. 45, Galle Road, Colombo 06'),
+                    _buildInfoRow(Icons.person,      'Full Name',      'Jayantha Perera'),
+                    _buildInfoRow(Icons.cake,        'Date of Birth',  'January 15, 1979'),
+                    _buildInfoRow(Icons.phone,       'Phone',          '+94 77 123 4567'),
+                    _buildInfoRow(Icons.email,       'Email',          'j.perera@email.com'),
+                    _buildInfoRow(Icons.location_on, 'Address',        'No. 45, Galle Road, Colombo 06'),
                   ]),
                   const SizedBox(height: 24),
 
                   // Medical Information
-                  _buildSectionTitle('Medical Information'),
+                  const Text('Medical Information', style: AppTheme.headingMedium),
                   const SizedBox(height: 12),
                   _buildInfoCard([
-                    _buildInfoRow(Icons.bloodtype, 'Blood Type', 'O Positive'),
-                    _buildInfoRow(Icons.height, 'Height', '172 cm'),
-                    _buildInfoRow(Icons.monitor_weight, 'Weight', '75 kg'),
-                    _buildInfoRow(Icons.favorite, 'BMI', '25.4 (Overweight)'),
+                    _buildInfoRow(Icons.bloodtype,       'Blood Type', 'O Positive'),
+                    _buildInfoRow(Icons.height,          'Height',     '172 cm'),
+                    _buildInfoRow(Icons.monitor_weight,  'Weight',     '75 kg'),
+                    _buildInfoRow(Icons.favorite,        'BMI',        '25.4 (Overweight)'),
                   ]),
                   const SizedBox(height: 24),
 
                   // Allergies
-                  _buildSectionTitle('Allergies'),
+                  const Text('Allergies', style: AppTheme.headingMedium),
                   const SizedBox(height: 12),
-                  _buildChipList([
-                    'Penicillin',
-                    'Peanuts',
-                    'Latex',
-                  ], Colors.red),
+                  _buildChipList(['Penicillin', 'Peanuts', 'Latex'], Colors.red),
                   const SizedBox(height: 24),
 
                   // Current Medications
-                  _buildSectionTitle('Current Medications'),
+                  const Text('Current Medications', style: AppTheme.headingMedium),
                   const SizedBox(height: 12),
-                  _buildMedicationCard('Metformin', '500mg', 'Twice daily', Colors.blue),
+                  _buildMedicationCard('Metformin',  '500mg', 'Twice daily', Colors.blue),
                   const SizedBox(height: 8),
-                  _buildMedicationCard('Lisinopril', '10mg', 'Once daily', Colors.orange),
+                  _buildMedicationCard('Lisinopril', '10mg',  'Once daily',  Colors.orange),
                   const SizedBox(height: 8),
-                  _buildMedicationCard('Aspirin', '81mg', 'Once daily', Colors.purple),
+                  _buildMedicationCard('Aspirin',    '81mg',  'Once daily',  Colors.purple),
                   const SizedBox(height: 24),
 
                   // Medical Conditions
-                  _buildSectionTitle('Medical Conditions'),
+                  const Text('Medical Conditions', style: AppTheme.headingMedium),
                   const SizedBox(height: 12),
-                  _buildChipList([
-                    'Type 2 Diabetes',
-                    'Hypertension',
-                    'High Cholesterol',
-                  ], const Color(0xFF38B2AC)),
+                  _buildChipList(
+                    ['Type 2 Diabetes', 'Hypertension', 'High Cholesterol'],
+                    AppTheme.primary, // ✅ AppTheme color
+                  ),
                   const SizedBox(height: 24),
 
                   // Emergency Contact
-                  _buildSectionTitle('Emergency Contact'),
+                  const Text('Emergency Contact', style: AppTheme.headingMedium),
                   const SizedBox(height: 12),
                   _buildInfoCard([
-                    _buildInfoRow(Icons.person, 'Name', 'Nimal Perera (Brother)'),
-                    _buildInfoRow(Icons.phone, 'Phone', '+94 77 987 6543'),
-                    _buildInfoRow(Icons.phone, 'Relationship', 'Brother'),
+                    _buildInfoRow(Icons.person, 'Name',         'Nimal Perera (Brother)'),
+                    _buildInfoRow(Icons.phone,  'Phone',        '+94 77 987 6543'),
+                    _buildInfoRow(Icons.phone,  'Relationship', 'Brother'),
                   ]),
                   const SizedBox(height: 24),
 
                   // Insurance Information
-                  _buildSectionTitle('Insurance Information'),
+                  const Text('Insurance Information', style: AppTheme.headingMedium),
                   const SizedBox(height: 12),
                   _buildInfoCard([
-                    _buildInfoRow(Icons.business, 'Provider', 'AIA Insurance'),
+                    _buildInfoRow(Icons.business,    'Provider',      'AIA Insurance'),
                     _buildInfoRow(Icons.credit_card, 'Policy Number', 'AIA-2024-12345'),
-                    _buildInfoRow(Icons.event, 'Valid Until', 'December 31, 2024'),
+                    _buildInfoRow(Icons.event,       'Valid Until',   'December 31, 2024'),
                   ]),
                   const SizedBox(height: 24),
 
                   // Recent Visits
-                  _buildSectionTitle('Recent Visits'),
+                  const Text('Recent Visits', style: AppTheme.headingMedium),
                   const SizedBox(height: 12),
-                  _buildVisitCard(
-                    'General Checkup',
-                    'Dr. Silva',
-                    'Jan 15, 2026',
-                    'Routine examination - All normal',
-                  ),
+                  _buildVisitCard('General Checkup',       'Dr. Silva',      'Jan 15, 2026', 'Routine examination - All normal'),
                   const SizedBox(height: 8),
-                  _buildVisitCard(
-                    'Follow-up - Diabetes',
-                    'Dr. Fernando',
-                    'Dec 20, 2025',
-                    'Blood sugar levels stable',
-                  ),
+                  _buildVisitCard('Follow-up - Diabetes',  'Dr. Fernando',   'Dec 20, 2025', 'Blood sugar levels stable'),
                   const SizedBox(height: 8),
-                  _buildVisitCard(
-                    'Blood Pressure Check',
-                    'Nurse Kamala',
-                    'Nov 10, 2025',
-                    'BP: 135/85 mmHg',
-                  ),
+                  _buildVisitCard('Blood Pressure Check',  'Nurse Kamala',   'Nov 10, 2025', 'BP: 135/85 mmHg'),
                   const SizedBox(height: 24),
 
-                  // Documents
-                  _buildSectionTitle('Medical Documents'),
+                  // Medical Documents
+                  const Text('Medical Documents', style: AppTheme.headingMedium),
                   const SizedBox(height: 12),
                   _buildDocumentCard('Lab Results - Blood Test', 'Jan 15, 2026', Icons.description),
                   const SizedBox(height: 8),
-                  _buildDocumentCard('X-Ray - Chest', 'Dec 20, 2025', Icons.image),
+                  _buildDocumentCard('X-Ray - Chest',            'Dec 20, 2025', Icons.image),
                   const SizedBox(height: 8),
-                  _buildDocumentCard('Prescription', 'Dec 20, 2025', Icons.medical_services),
+                  _buildDocumentCard('Prescription',             'Dec 20, 2025', Icons.medical_services),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -282,50 +236,29 @@ class PatientProfilePage extends StatelessWidget {
     );
   }
 
+  // ── Helper Widgets ───────────────────────────────────────────────
+
   Widget _buildQuickStat(IconData icon, String label) {
     return Row(
       children: [
         Icon(icon, color: Colors.white, size: 16),
         const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        Text(label, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
       ],
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: Color(0xFF2D3748),
-      ),
-    );
-  }
-
+  /// Generic white card wrapper
   Widget _buildInfoCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
         ],
       ),
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 
@@ -333,48 +266,26 @@ class PatientProfilePage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.grey[200]!,
-            width: 1,
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.grey[200]!, width: 1)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFFE6FFFA),
+              color: AppTheme.primaryLight,          // ✅ AppTheme color
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: const Color(0xFF38B2AC),
-            ),
+            child: Icon(icon, size: 20, color: AppTheme.primary), // ✅ AppTheme color
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
+                Text(label, style: AppTheme.labelSmall),  // ✅ AppTheme text style
                 const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2D3748),
-                  ),
-                ),
+                Text(value, style: AppTheme.bodyMedium),  // ✅ AppTheme text style
               ],
             ),
           ),
@@ -390,11 +301,7 @@ class PatientProfilePage extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
         ],
       ),
       child: Wrap(
@@ -415,11 +322,7 @@ class PatientProfilePage extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   item,
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 13),
                 ),
               ],
             ),
@@ -437,11 +340,7 @@ class PatientProfilePage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey[200]!, width: 1),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -452,33 +351,16 @@ class PatientProfilePage extends StatelessWidget {
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              Icons.medication,
-              color: color,
-              size: 24,
-            ),
+            child: Icon(Icons.medication, color: color, size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3748),
-                  ),
-                ),
+                Text(name, style: AppTheme.bodyMedium),                         // ✅ AppTheme text style
                 const SizedBox(height: 4),
-                Text(
-                  '$dosage • $frequency',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                  ),
-                ),
+                Text('$dosage • $frequency', style: AppTheme.bodySmall),         // ✅ AppTheme text style
               ],
             ),
           ),
@@ -490,11 +372,7 @@ class PatientProfilePage extends StatelessWidget {
             ),
             child: const Text(
               'Active',
-              style: TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600, fontSize: 12),
             ),
           ),
         ],
@@ -515,23 +393,8 @@ class PatientProfilePage extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3748),
-                  ),
-                ),
-              ),
-              Text(
-                date,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-              ),
+              Expanded(child: Text(title, style: AppTheme.bodyMedium)), // ✅ AppTheme text style
+              Text(date, style: AppTheme.labelSmall),                   // ✅ AppTheme text style
             ],
           ),
           const SizedBox(height: 8),
@@ -539,23 +402,13 @@ class PatientProfilePage extends StatelessWidget {
             children: [
               Icon(Icons.person, size: 16, color: Colors.grey[600]),
               const SizedBox(width: 4),
-              Text(
-                doctor,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[700],
-                ),
-              ),
+              Text(doctor, style: AppTheme.bodySmall), // ✅ AppTheme text style
             ],
           ),
           const SizedBox(height: 8),
           Text(
             notes,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[600],
-              fontStyle: FontStyle.italic,
-            ),
+            style: TextStyle(fontSize: 13, color: Colors.grey[600], fontStyle: FontStyle.italic),
           ),
         ],
       ),
@@ -575,42 +428,25 @@ class PatientProfilePage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFFE6FFFA),
+              color: AppTheme.primaryLight,          // ✅ AppTheme color
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              color: const Color(0xFF38B2AC),
-              size: 24,
-            ),
+            child: Icon(icon, color: AppTheme.primary, size: 24), // ✅ AppTheme color
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2D3748),
-                  ),
-                ),
+                Text(title, style: AppTheme.bodyMedium), // ✅ AppTheme text style
                 const SizedBox(height: 2),
-                Text(
-                  date,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
+                Text(date,  style: AppTheme.labelSmall), // ✅ AppTheme text style
               ],
             ),
           ),
           IconButton(
             icon: const Icon(Icons.download),
-            color: const Color(0xFF38B2AC),
+            color: AppTheme.primary, // ✅ AppTheme color
             onPressed: () {},
           ),
         ],
