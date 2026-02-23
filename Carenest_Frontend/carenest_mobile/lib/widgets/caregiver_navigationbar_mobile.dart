@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
 import '../core/app_theme.dart';
 
-/// Reusable scaffold + bottom navigation for CAREGIVER role (mobile).
-/// Other devs should wrap their caregiver pages with this widget.
+/// ---------------------------------------------------------------------------
+/// CAREGIVER MOBILE NAVIGATION WRAPPER
+/// ---------------------------------------------------------------------------
+/// HOW TO USE:
+/// Wrap any caregiver page inside this widget.
+/// Example:
+///
+/// return CaregiverNavigationBarMobile(
+///   currentIndex: CaregiverNavigationBarMobile.homeIndex,
+///   child: CaregiverDashboardPage(),
+/// );
+///
+/// This keeps navigation consistent across all caregiver screens.
+/// ---------------------------------------------------------------------------
 class CaregiverNavigationBarMobile extends StatelessWidget {
   final Widget child;
 
-  /// Active tab index (0..3)
+  /// Active tab index (0..2)
   final int currentIndex;
+
+  /// Disable navigation if needed (optional)
   final bool enableNavigation;
 
   const CaregiverNavigationBarMobile({
@@ -17,30 +31,35 @@ class CaregiverNavigationBarMobile extends StatelessWidget {
     this.enableNavigation = true,
   });
 
+  // ---------------------------------------------------------------------------
+  // TAB INDEXES (Use these in pages)
+  // ---------------------------------------------------------------------------
   static const int homeIndex = 0;
-  static const int jobsIndex = 1;
-  static const int messagesIndex = 2;
-  static const int profileIndex = 3;
+  static const int notificationsIndex = 1;
+  static const int profileIndex = 2;
 
-  // TODO: Replace these with your real route names when pages exist.
+  // ---------------------------------------------------------------------------
+  // ROUTE NAMES (Make sure these exist in main.dart)
+  // ---------------------------------------------------------------------------
   static const String homeRoute = '/caregiver-dashboard';
-  static const String jobsRoute = '/caregiver-jobs';
-  static const String messagesRoute = '/caregiver-messages';
+  static const String notificationsRoute = '/caregiver-notifications';
   static const String profileRoute = '/caregiver-profile';
 
+  // ---------------------------------------------------------------------------
+  // NAVIGATION HANDLER
+  // ---------------------------------------------------------------------------
   void _go(BuildContext context, int index) {
     if (index == currentIndex) return;
-
-    if (!enableNavigation) return; // 👈 ADD THIS LINE
+    if (!enableNavigation) return;
 
     final route = switch (index) {
       homeIndex => homeRoute,
-      jobsIndex => jobsRoute,
-      messagesIndex => messagesRoute,
+      notificationsIndex => notificationsRoute,
       profileIndex => profileRoute,
       _ => homeRoute,
     };
 
+    // Replace current page instead of stacking pages
     Navigator.pushReplacementNamed(context, route);
   }
 
@@ -48,7 +67,11 @@ class CaregiverNavigationBarMobile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
+
+      /// This is where your actual page appears
       body: child,
+
+      /// Bottom Navigation Bar
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: AppTheme.surface,
@@ -61,6 +84,8 @@ class CaregiverNavigationBarMobile extends StatelessWidget {
           selectedIndex: currentIndex,
           onDestinationSelected: (i) => _go(context, i),
           indicatorColor: AppTheme.primary.withOpacity(0.12),
+
+          /// 3 Equal Items (Auto spread by Flutter)
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.home_outlined),
@@ -68,14 +93,9 @@ class CaregiverNavigationBarMobile extends StatelessWidget {
               label: 'Home',
             ),
             NavigationDestination(
-              icon: Icon(Icons.list_alt_outlined),
-              selectedIcon: Icon(Icons.list_alt, color: AppTheme.primary),
-              label: 'Jobs',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.chat_bubble_outline),
-              selectedIcon: Icon(Icons.chat_bubble, color: AppTheme.primary),
-              label: 'Messages',
+              icon: Icon(Icons.notifications_outlined),
+              selectedIcon: Icon(Icons.notifications, color: AppTheme.primary),
+              label: 'Notifications',
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline),

@@ -50,7 +50,7 @@ class CareNestApp extends StatelessWidget {
 
         // --- Caregiver Routes ---
         '/caregiver/register': (context) => const RegisterCaregiverScreen(),
-        '/caregiver/profile': (context) => const CareGiverProfilePage(),
+        '/caregiver/profile': (context) => const CaregiverProfilePage(),
         '/caregiver/dashboard': (context) => const CaregiverDashboardPage(),
         '/caregiver/details': (context) => const CaregiverDetailsPage(),
         // '/caregiver/update-status': (context) => const UpdateCareStatusPage(),
