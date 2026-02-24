@@ -2,8 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../core/role_storage.dart';
 import '../core/user_role.dart';
-import 'caregiver_dashboard_page.dart';
-import 'carereceiver_dashboard_page.dart';
+import '../screens/caregiver/caregiver_dashboard_page.dart';
+import '../screens/patient/carereceiver_dashboard_page.dart';
 
 class RoleSelectPage extends StatelessWidget {
   const RoleSelectPage({super.key});
