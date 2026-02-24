@@ -1,109 +1,68 @@
 import 'package:flutter/material.dart';
-import '../core/app_theme.dart';
 
-/// ---------------------------------------------------------------------------
-/// CAREGIVER MOBILE NAVIGATION WRAPPER
-/// ---------------------------------------------------------------------------
-/// HOW TO USE:
-/// Wrap any caregiver page inside this widget.
-/// Example:
-///
-/// return CaregiverNavigationBarMobile(
-///   currentIndex: CaregiverNavigationBarMobile.homeIndex,
-///   child: CaregiverDashboardPage(),
-/// );
-///
-/// This keeps navigation consistent across all caregiver screens.
-/// ---------------------------------------------------------------------------
-class CaregiverNavigationBarMobile extends StatelessWidget {
-  final Widget child;
-
-  /// Active tab index (0..2)
+class CaregiverBottomNav extends StatelessWidget {
   final int currentIndex;
 
-  /// Disable navigation if needed (optional)
-  final bool enableNavigation;
-
-  const CaregiverNavigationBarMobile({
-    super.key,
-    required this.child,
-    required this.currentIndex,
-    this.enableNavigation = true,
-  });
-
-  // ---------------------------------------------------------------------------
-  // TAB INDEXES (Use these in pages)
-  // ---------------------------------------------------------------------------
+  // Indices (so team members don't guess numbers)
   static const int homeIndex = 0;
   static const int notificationsIndex = 1;
   static const int profileIndex = 2;
 
-  // ---------------------------------------------------------------------------
-  // ROUTE NAMES (Make sure these exist in main.dart)
-  // ---------------------------------------------------------------------------
-  static const String homeRoute = '/caregiver-dashboard';
-  static const String notificationsRoute = '/caregiver-notifications';
-  static const String profileRoute = '/caregiver-profile';
+  // ✅ Single source of truth for routes
+  static const String routeHome = '/caregiver-dashboard';
+  static const String routeNotifications = '/caregiver-notifications';
+  static const String routeProfile = '/caregiver-profile';
 
-  // ---------------------------------------------------------------------------
-  // NAVIGATION HANDLER
-  // ---------------------------------------------------------------------------
+  const CaregiverBottomNav({super.key, required this.currentIndex});
+
   void _go(BuildContext context, int index) {
-    if (index == currentIndex) return;
-    if (!enableNavigation) return;
+    final routes = <String>[routeHome, routeNotifications, routeProfile];
 
-    final route = switch (index) {
-      homeIndex => homeRoute,
-      notificationsIndex => notificationsRoute,
-      profileIndex => profileRoute,
-      _ => homeRoute,
-    };
+    final target = routes[index];
+    final current = ModalRoute.of(context)?.settings.name;
 
-    // Replace current page instead of stacking pages
-    Navigator.pushReplacementNamed(context, route);
+    if (current == target) return;
+    Navigator.pushReplacementNamed(context, target);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-
-      /// This is where your actual page appears
-      body: child,
-
-      /// Bottom Navigation Bar
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.12))),
+    return Container(
+      // subtle top border like iOS/modern apps
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.35),
+            width: 1,
+          ),
         ),
-        child: NavigationBar(
-          backgroundColor: AppTheme.surface,
-          elevation: 0,
-          height: 70,
-          selectedIndex: currentIndex,
-          onDestinationSelected: (i) => _go(context, i),
-          indicatorColor: AppTheme.primary.withOpacity(0.12),
+      ),
+      child: NavigationBar(
+        height: 70,
+        selectedIndex: currentIndex,
+        onDestinationSelected: (i) => _go(context, i),
 
-          /// 3 Equal Items (Auto spread by Flutter)
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home, color: AppTheme.primary),
-              label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.notifications_outlined),
-              selectedIcon: Icon(Icons.notifications, color: AppTheme.primary),
-              label: 'Notifications',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person, color: AppTheme.primary),
-              label: 'Profile',
-            ),
-          ],
-        ),
+        // modern "pill" indicator
+        indicatorColor: Theme.of(context).colorScheme.primary.withOpacity(0.14),
+
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.notifications_none_rounded),
+            selectedIcon: Icon(Icons.notifications_rounded),
+            label: 'Notifications',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }

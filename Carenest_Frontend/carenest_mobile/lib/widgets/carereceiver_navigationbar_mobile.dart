@@ -1,89 +1,75 @@
 import 'package:flutter/material.dart';
-import '../core/app_theme.dart';
 
-/// Reusable scaffold + bottom navigation for CARE RECEIVER role (mobile).
-/// Other devs should wrap their care receiver pages with this widget.
-class CareReceiverNavigationBarMobile extends StatelessWidget {
-  final Widget child;
-
-  /// Active tab index (0..3)
+class CareReceiverBottomNav extends StatelessWidget {
   final int currentIndex;
-  final bool enableNavigation;
-
-  const CareReceiverNavigationBarMobile({
-    super.key,
-    required this.child,
-    required this.currentIndex,
-    this.enableNavigation = true,
-  });
 
   static const int homeIndex = 0;
   static const int findCareIndex = 1;
-  static const int messagesIndex = 2;
+  static const int notificationsIndex = 2;
   static const int profileIndex = 3;
 
-  // TODO: Replace these with your real route names when pages exist.
-  static const String homeRoute = '/carereceiver-dashboard';
-  static const String findCareRoute = '/carereceiver-find-care';
-  static const String messagesRoute = '/carereceiver-messages';
-  static const String profileRoute = '/carereceiver-profile';
+  // ✅ Single source of truth for routes
+  static const String routeHome = '/carereceiver-dashboard';
+  static const String routeFindCare = '/carereceiver-find-care';
+  static const String routeNotifications = '/carereceiver-notifications';
+  static const String routeProfile = '/carereceiver-profile';
+
+  const CareReceiverBottomNav({super.key, required this.currentIndex});
 
   void _go(BuildContext context, int index) {
-    if (index == currentIndex) return;
+    final routes = <String>[
+      routeHome,
+      routeFindCare,
+      routeNotifications,
+      routeProfile,
+    ];
 
-    if (!enableNavigation) return;
+    final target = routes[index];
+    final current = ModalRoute.of(context)?.settings.name;
 
-    final route = switch (index) {
-      homeIndex => homeRoute,
-      findCareIndex => findCareRoute,
-      messagesIndex => messagesRoute,
-      profileIndex => profileRoute,
-      _ => homeRoute,
-    };
-
-    Navigator.pushReplacementNamed(context, route);
+    if (current == target) return;
+    Navigator.pushReplacementNamed(context, target);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.12))),
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.35),
+            width: 1,
+          ),
         ),
-        child: NavigationBar(
-          backgroundColor: AppTheme.surface,
-          elevation: 0,
-          height: 70,
-          selectedIndex: currentIndex,
-          onDestinationSelected: (i) => _go(context, i),
-          indicatorColor: AppTheme.primary.withOpacity(0.12),
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home, color: AppTheme.primary),
-              label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.search_outlined),
-              selectedIcon: Icon(Icons.search, color: AppTheme.primary),
-              label: 'Find Care',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.chat_bubble_outline),
-              selectedIcon: Icon(Icons.chat_bubble, color: AppTheme.primary),
-              label: 'Messages',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person, color: AppTheme.primary),
-              label: 'Profile',
-            ),
-          ],
-        ),
+      ),
+      child: NavigationBar(
+        height: 70,
+        selectedIndex: currentIndex,
+        onDestinationSelected: (i) => _go(context, i),
+        indicatorColor: Theme.of(context).colorScheme.primary.withOpacity(0.14),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.search_rounded),
+            selectedIcon: Icon(Icons.search_rounded),
+            label: 'Find care',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.notifications_none_rounded),
+            selectedIcon: Icon(Icons.notifications_rounded),
+            label: 'Notifications',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
