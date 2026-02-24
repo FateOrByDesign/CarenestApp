@@ -1,27 +1,19 @@
 import 'package:flutter/material.dart';
 
-class CareReceiverBottomNav extends StatelessWidget {
+class CareReceiverNavigationBarMobile extends StatelessWidget {
   final int currentIndex;
 
-  static const int homeIndex = 0;
-  static const int findCareIndex = 1;
-  static const int notificationsIndex = 2;
-  static const int profileIndex = 3;
-
-  // ✅ Single source of truth for routes
-  static const String routeHome = '/carereceiver-dashboard';
-  static const String routeFindCare = '/carereceiver-find-care';
-  static const String routeNotifications = '/carereceiver-notifications';
-  static const String routeProfile = '/carereceiver-profile';
-
-  const CareReceiverBottomNav({super.key, required this.currentIndex});
+  const CareReceiverNavigationBarMobile({
+    super.key,
+    required this.currentIndex,
+  });
 
   void _go(BuildContext context, int index) {
-    final routes = <String>[
-      routeHome,
-      routeFindCare,
-      routeNotifications,
-      routeProfile,
+    const routes = [
+      '/patient/dashboard', // Home
+      '/patient/request-caregiver', // Find care
+      '/patient/notifications', // Notifications
+      '/patient/profile', // Profile
     ];
 
     final target = routes[index];
@@ -33,44 +25,32 @@ class CareReceiverBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).dividerColor.withOpacity(0.35),
-            width: 1,
-          ),
+    return NavigationBar(
+      height: 70,
+      selectedIndex: currentIndex,
+      onDestinationSelected: (i) => _go(context, i),
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home),
+          label: 'Home',
         ),
-      ),
-      child: NavigationBar(
-        height: 70,
-        selectedIndex: currentIndex,
-        onDestinationSelected: (i) => _go(context, i),
-        indicatorColor: Theme.of(context).colorScheme.primary.withOpacity(0.14),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.search_rounded),
-            selectedIcon: Icon(Icons.search_rounded),
-            label: 'Find care',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.notifications_none_rounded),
-            selectedIcon: Icon(Icons.notifications_rounded),
-            label: 'Notifications',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'Profile',
-          ),
-        ],
-      ),
+        NavigationDestination(
+          icon: Icon(Icons.search_rounded),
+          selectedIcon: Icon(Icons.search),
+          label: 'Find care',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.notifications_none_rounded),
+          selectedIcon: Icon(Icons.notifications),
+          label: 'Notifications',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.person_outline),
+          selectedIcon: Icon(Icons.person),
+          label: 'Profile',
+        ),
+      ],
     );
   }
 }
