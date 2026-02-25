@@ -32,6 +32,7 @@ class CareNestApp extends StatelessWidget {
     return MaterialApp(
       title: 'CareNest',
       theme: ThemeData(primarySwatch: Colors.teal),
+      theme: ThemeData(primarySwatch: Colors.teal),
       debugShowCheckedModeBanner: false,
 
       // --- Initial Route ---
@@ -53,6 +54,7 @@ class CareNestApp extends StatelessWidget {
 
         // --- Caregiver Routes ---
         '/caregiver/register': (context) => const RegisterCaregiverScreen(),
+        '/caregiver/profile': (context) => const CaregiverProfilePage(),
         '/caregiver/profile': (context) => const CaregiverProfilePage(),
         '/caregiver/dashboard': (context) => const CaregiverDashboardPage(),
         '/caregiver/details': (context) => const CaregiverDetailsPage(),
