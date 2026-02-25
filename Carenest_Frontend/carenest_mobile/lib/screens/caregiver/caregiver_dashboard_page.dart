@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../widgets/caregiver_navigationbar_mobile.dart';
 
-class CaregiverDashboardPage extends StatefulWidget {
+class CaregiverDashboardPage extends StatelessWidget {
   const CaregiverDashboardPage({super.key});
 
-  static const routeName = '/caregiver-dashboard';
-
-  @override
-  State<CaregiverDashboardPage> createState() => _CaregiverDashboardPageState();
-}
-
-class _CaregiverDashboardPageState extends State<CaregiverDashboardPage> {
-  int _navIndex = 0;
+  // ✅ MUST match navbar + main.dart
+  static const routeName = '/caregiver/dashboard';
 
   // Colors tuned to match the UI
   static const _bg = Color(0xFFF7FAFA);
@@ -27,7 +22,6 @@ class _CaregiverDashboardPageState extends State<CaregiverDashboardPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
           children: [
-            // Header: "Hi, Kavindu" + avatar
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -43,8 +37,6 @@ class _CaregiverDashboardPageState extends State<CaregiverDashboardPage> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Replace with your real image:
-                // CircleAvatar(backgroundImage: AssetImage('assets/images/avatar.jpg'))
                 const CircleAvatar(
                   radius: 18,
                   backgroundColor: Color(0xFFE9F3F2),
@@ -55,7 +47,6 @@ class _CaregiverDashboardPageState extends State<CaregiverDashboardPage> {
 
             const SizedBox(height: 18),
 
-            // Two stat cards row
             Row(
               children: [
                 Expanded(
@@ -69,7 +60,7 @@ class _CaregiverDashboardPageState extends State<CaregiverDashboardPage> {
                 Expanded(
                   child: _StatCard(
                     title: 'This month',
-                    value: 'LKR 7,500',
+                    value: 'LKR 5000',
                     valueColor: _primary,
                   ),
                 ),
@@ -78,15 +69,14 @@ class _CaregiverDashboardPageState extends State<CaregiverDashboardPage> {
 
             const SizedBox(height: 18),
 
-            // Next Visit dark card
             const _NextVisitCard(),
 
             const SizedBox(height: 18),
 
             const Text(
-              'Available jobs near you',
+              'History',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 22,
                 fontWeight: FontWeight.w800,
                 color: _textDark,
               ),
@@ -94,62 +84,25 @@ class _CaregiverDashboardPageState extends State<CaregiverDashboardPage> {
 
             const SizedBox(height: 12),
 
-            // Available job card (first item visible in UI)
             const _JobCard(
-              tag: 'HOSPITAL STAY',
-              price: 'LKR 3,000',
-              time: 'Tomorrow, 08:00 AM',
+              tag: 'HOSPITAL VISIT - COMPLETED',
+              price: "Sahan Fernando",
+              time: '23/01/2026',
             ),
 
             const SizedBox(height: 12),
 
-            // Optional second card placeholder (your screenshot shows more below)
             const _JobCard(
-              tag: 'HOME VISIT',
-              price: 'LKR 2,200',
-              time: 'Sat, 10:30 AM',
+              tag: 'HOME VISIT - COMPLETED',
+              price: "Sathika Perera",
+              time: '05/02/2026',
             ),
           ],
         ),
       ),
 
-      // Bottom nav (Home/Jobs/Messages/Profile)
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: _cardBorder)),
-        ),
-        child: NavigationBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          height: 70,
-          selectedIndex: _navIndex,
-          onDestinationSelected: (i) => setState(() => _navIndex = i),
-          indicatorColor: _primary.withOpacity(0.12),
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home, color: _primary),
-              label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.list_alt_outlined),
-              selectedIcon: Icon(Icons.list_alt, color: _primary),
-              label: 'Jobs',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.chat_bubble_outline),
-              selectedIcon: Icon(Icons.chat_bubble, color: _primary),
-              label: 'Messages',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person, color: _primary),
-              label: 'Profile',
-            ),
-          ],
-        ),
-      ),
+      // ✅ EASY APPLY: just this line
+      bottomNavigationBar: const CaregiverNavigationBarMobile(currentIndex: 0),
     );
   }
 }
@@ -240,7 +193,6 @@ class _NextVisitCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       child: Stack(
         children: [
-          // Faint clock icon on the right
           Positioned(
             right: -6,
             top: 28,
@@ -250,7 +202,6 @@ class _NextVisitCard extends StatelessWidget {
               color: Colors.white.withOpacity(0.10),
             ),
           ),
-
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -263,10 +214,7 @@ class _NextVisitCard extends StatelessWidget {
                   color: _primary.withOpacity(0.85),
                 ),
               ),
-              const SizedBox(
-                height: 10,
-              ), //made a change 14->10 (overflowed by 4.0 pixels)
-
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Container(
@@ -313,9 +261,7 @@ class _NextVisitCard extends StatelessWidget {
                   ),
                 ],
               ),
-
               const SizedBox(height: 12),
-
               Row(
                 children: const [
                   Icon(
@@ -334,10 +280,7 @@ class _NextVisitCard extends StatelessWidget {
                   ),
                 ],
               ),
-
               const Spacer(),
-
-              // Start visit button
               SizedBox(
                 width: double.infinity,
                 height: 46,
@@ -395,7 +338,6 @@ class _JobCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tag pill
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
@@ -414,7 +356,6 @@ class _JobCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-
           Text(
             price,
             style: const TextStyle(
@@ -424,7 +365,6 @@ class _JobCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-
           Row(
             children: [
               const Icon(Icons.schedule, size: 18, color: _textSoft),
@@ -439,9 +379,7 @@ class _JobCard extends StatelessWidget {
               ),
             ],
           ),
-
-          const SizedBox(height: 10), //4 pixels overflow error 14->10
-          // View details button (outlined)
+          const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
             height: 42,

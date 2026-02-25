@@ -9,18 +9,21 @@ import 'screens/patient/patient_profile_page.dart';
 import 'screens/patient/carereceiver_dashboard_page.dart';
 import 'screens/patient/patient_details.dart';
 import 'screens/patient/request_caregiver.dart';
+import 'screens/patient/patient_notification_page.dart';
 // caregiver screens
 import 'screens/caregiver/caregiver_register_page.dart';
 import 'screens/caregiver/caregiver_profile_page.dart';
 import 'screens/caregiver/caregiver_dashboard_page.dart';
 import 'screens/caregiver/caregiver_details.dart';
 import 'screens/caregiver/update_caregiver_status.dart';
+import 'screens/caregiver/caregiver_notification_page.dart';
 // common screens
 import 'pages/role_select_page.dart';
 
 void main() {
   runApp(const CareNestApp());
 }
+
 class CareNestApp extends StatelessWidget {
   const CareNestApp({super.key});
 
@@ -28,11 +31,9 @@ class CareNestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CareNest',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-      ),
+      theme: ThemeData(primarySwatch: Colors.teal),
       debugShowCheckedModeBanner: false,
-      
+
       // --- Initial Route ---
       initialRoute: '/',
 
@@ -48,13 +49,16 @@ class CareNestApp extends StatelessWidget {
         '/patient/dashboard': (context) => const CareReceiverDashboardPage(),
         '/patient/details': (context) => const PatientDetailsPage(),
         '/patient/request-caregiver': (context) => const RequestCarePage(),
+        '/patient/notifications': (context) => const PatientNotificationsPage(),
 
         // --- Caregiver Routes ---
         '/caregiver/register': (context) => const RegisterCaregiverScreen(),
-        '/caregiver/profile': (context) => const CareGiverProfilePage(),
+        '/caregiver/profile': (context) => const CaregiverProfilePage(),
         '/caregiver/dashboard': (context) => const CaregiverDashboardPage(),
         '/caregiver/details': (context) => const CaregiverDetailsPage(),
-       // '/caregiver/update-status': (context) => const UpdateCareStatusPage(),
+        '/caregiver/notifications': (context) =>
+            const CaregiverNotificationsPage(),
+        // '/caregiver/update-status': (context) => const UpdateCareStatusPage(),
       },
     );
   }
