@@ -15,7 +15,7 @@ class _RequestCarePageState extends State<RequestCarePage> {
   TimeOfDay? startTime;
   TimeOfDay? endTime;
 
-  final TextEditingController durationController = TextEditingController();
+  //final TextEditingController durationController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
   final TextEditingController notesController = TextEditingController();
 
