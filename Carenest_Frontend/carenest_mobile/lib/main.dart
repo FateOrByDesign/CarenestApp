@@ -17,6 +17,7 @@ import 'screens/caregiver/caregiver_dashboard_page.dart';
 import 'screens/caregiver/caregiver_details.dart';
 import 'screens/caregiver/update_caregiver_status.dart';
 import 'screens/caregiver/caregiver_notification_page.dart';
+import 'package:carenest_mobileapp/screens/caregiver/caregiver_authentication_page.dart';
 // common screens
 import 'pages/role_select_page.dart';
 
@@ -32,7 +33,10 @@ class CareNestApp extends StatelessWidget {
     return MaterialApp(
       title: 'CareNest',
       theme: ThemeData(primarySwatch: Colors.teal),
-      theme: ThemeData(primarySwatch: Colors.teal),
+      home: CaregiverAuthenticationPage(
+        username: 'perera', // your custom username
+        password: '12345', // your custom password
+      ),
       debugShowCheckedModeBanner: false,
 
       // --- Initial Route ---
