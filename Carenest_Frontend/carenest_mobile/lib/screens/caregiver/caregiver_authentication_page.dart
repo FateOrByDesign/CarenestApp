@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:helloworld/screens/Dashboard.dart';
-import '../auth/auth_service.dart';
+import 'package:carenest_mobileapp/screens/caregiver/caregiver_dashboard_page.dart';
+import '../../auth/auth_service.dart';
+import 'package:carenest_mobileapp/core/app_theme.dart';
+import 'package:carenest_mobileapp/screens/patient/request_caregiver.dart'; // adjust path if needed
+import 'dart:ui';
 
 class CaregiverAuthenticationPage extends StatefulWidget {
   final String username;
@@ -34,6 +37,8 @@ class _CaregiverAuthenticationPageState
     //call your AuthService(frontend mock)
     final result = await AuthService.login(widget.username, widget.password);
 
+    if (!mounted) return;
+
     setState(() {
       isLoading = false;
       isSuccess = result.success;
@@ -43,12 +48,25 @@ class _CaregiverAuthenticationPageState
 
     // If login succeeds, redirect to dashboard after short delay
     if (result.success) {
-      Future.delayed(const Duration(seconds: 3), () {
+      Future.delayed(const Duration(seconds: 4), () {
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (_) =>
                 CaregiverDashboardPage(/*caregiverName: caregiverName*/),
+          ),
+        );
+      });
+    } else {
+      //Redirect to login after 3 seconds if failed
+      Future.delayed(const Duration(seconds: 2), () {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                const RequestCarePage(), // change to your login page name
           ),
         );
       });
@@ -91,12 +109,71 @@ class _CaregiverAuthenticationPageState
                   ),
                 ],
               )
-            : Column(
-                mainAxisSize: MainAxisSize.min,
+            : Stack(
                 children: [
-                  const Icon(Icons.error, color: Colors.red, size: 80),
-                  const SizedBox(height: 20),
-                  Text(errorMessage, style: const TextStyle(color: Colors.red)),
+                  // Background Care Page
+                  const RequestCarePage(),
+
+                  // Blur Effect
+                  BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                    child: Container(color: Colors.black.withOpacity(0.2)),
+                  ),
+
+                  // Centered Error Box
+                  Center(
+                    child: Container(
+                      width: 320,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.25),
+                            blurRadius: 20,
+                            spreadRadius: 3,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: AppTheme.error,
+                            size: 80,
+                          ),
+                          const SizedBox(height: 20),
+
+                          Text(
+                            errorMessage,
+                            textAlign: TextAlign.center,
+                            style: AppTheme.headingMedium.copyWith(
+                              color: AppTheme.error,
+                            ),
+                          ),
+
+                          const SizedBox(height: 25),
+
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const RequestCarePage(),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.error,
+                            ),
+                            child: const Text("Try Again"),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
       ),
