@@ -21,6 +21,7 @@ import 'pages/role_select_page.dart';
 void main() {
   runApp(const CareNestApp());
 }
+
 class CareNestApp extends StatelessWidget {
   const CareNestApp({super.key});
 
@@ -28,11 +29,9 @@ class CareNestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CareNest',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-      ),
+      theme: ThemeData(primarySwatch: Colors.teal),
       debugShowCheckedModeBanner: false,
-      
+
       // --- Initial Route ---
       initialRoute: '/',
 
@@ -51,10 +50,10 @@ class CareNestApp extends StatelessWidget {
 
         // --- Caregiver Routes ---
         '/caregiver/register': (context) => const RegisterCaregiverScreen(),
-        '/caregiver/profile': (context) => const CareGiverProfilePage(),
+        '/caregiver/profile': (context) => const CaregiverProfilePage(),
         '/caregiver/dashboard': (context) => const CaregiverDashboardPage(),
         '/caregiver/details': (context) => const CaregiverDetailsPage(),
-       // '/caregiver/update-status': (context) => const UpdateCareStatusPage(),
+        // '/caregiver/update-status': (context) => const UpdateCareStatusPage(),
       },
     );
   }

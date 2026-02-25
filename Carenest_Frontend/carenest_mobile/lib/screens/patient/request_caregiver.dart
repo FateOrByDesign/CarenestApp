@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/app_theme.dart';
-import '../caregiver/update_caregiver_status.dart';
+import 'package:carenest_mobileapp/widgets/carereceiver_navigationbar_mobile.dart';
 
 class RequestCarePage extends StatefulWidget {
   const RequestCarePage({Key? key}) : super(key: key);
@@ -21,6 +21,7 @@ class _RequestCarePageState extends State<RequestCarePage> {
 
   final List<String> serviceTypes = ['Home care', 'Hospital Care'];
 
+  //Date picker
   Future<void> pickDate() async {
     DateTime? date = await showDatePicker(
       context: context,
@@ -33,6 +34,7 @@ class _RequestCarePageState extends State<RequestCarePage> {
     }
   }
 
+  //Start time picker
   Future<void> pickStartTime() async {
     TimeOfDay? time = await showTimePicker(
       context: context,
@@ -43,6 +45,7 @@ class _RequestCarePageState extends State<RequestCarePage> {
     }
   }
 
+  //End time picker
   Future<void> pickEndTime() async {
     TimeOfDay? time = await showTimePicker(
       context: context,
@@ -53,6 +56,26 @@ class _RequestCarePageState extends State<RequestCarePage> {
     }
   }
 
+  //Toggle button used for Date and Time selection
+  Widget buildDateTimeField({
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+    IconData? icon,
+  }) {
+    return TextFormField(
+      readOnly: true, // prevents keyboard from showing
+      onTap: onTap, // open picker
+      style: AppTheme.bodyText.copyWith(color: AppTheme.textDark),
+      decoration: InputDecoration(
+        hintText: value.isEmpty ? 'Select' : value, //New adding
+        suffixIcon: icon != null ? Icon(icon, color: AppTheme.primary) : null,
+      ),
+      controller: TextEditingController(text: value),
+    );
+  }
+
+  //Submit request
   void submitRequest() {
     if (serviceType == null ||
         selectedDate == null ||
@@ -65,44 +88,38 @@ class _RequestCarePageState extends State<RequestCarePage> {
       return;
     }
 
-    // TEMP values (later replace with API response)
-    final int visitId = 1;
-    final String patientName = 'Test Patient';
-
-    Navigator.push(
-      //for conect next page through button
+    // Placeholder for API call
+    ScaffoldMessenger.of(
       context,
-      MaterialPageRoute(
-        builder: (context) =>
-            UpdateCareStatusPage(visitId: visitId, patientName: patientName),
-      ),
-    );
+    ).showSnackBar(const SnackBar(content: Text('Request submitted!')));
   }
 
-  Widget buildToggleButton({
-    required VoidCallback onPressed,
-    required String text,
+  Widget buildCard({
     required IconData icon,
-    bool isSelected = false,
+    required String title,
+    required Widget child,
   }) {
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, color: AppTheme.primary),
-      label: Text(
-        text,
-        style: AppTheme.bodyText.copyWith(color: AppTheme.textDark),
-      ),
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size.fromHeight(50),
-        backgroundColor: AppTheme.surface,
-        side: BorderSide(
-          color: isSelected
-              ? AppTheme
-                    .primary // ✅ green when selected
-              : Colors.grey.withOpacity(0.3), // idle border
-          width: 1.5,
+    return Card(
+      color: AppTheme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 3,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: AppTheme.primary, size: 28),
+                const SizedBox(width: 12),
+                Text(title, style: AppTheme.headingMedium),
+              ],
+            ),
+            const SizedBox(height: 12),
+            child,
+          ],
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
@@ -110,130 +127,141 @@ class _RequestCarePageState extends State<RequestCarePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFA),
+      backgroundColor: AppTheme.background,
+
+      //currentIndex: CareReceiverNavigationBarMobile.findCareIndex,
+      //child: Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.primaryDark, // your Figma primary color
-        elevation: 0, // removes shadow
-        centerTitle: true, // title centered
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black, size: 28),
-          onPressed: () {
-            Navigator.pop(context); // go back
-          },
-        ),
+        backgroundColor: AppTheme.primary,
+        elevation: 0,
+        centerTitle: true,
         title: Text(
           'Request Care',
-          style: AppTheme.headingMedium.copyWith(color: Colors.black),
+          style: AppTheme.headingMedium.copyWith(color: Colors.white),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
+
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 16),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Service Type
-            Text('Service Type', style: AppTheme.headingMedium),
-            const SizedBox(height: 14),
-            DropdownButtonFormField<String>(
-              value: serviceType,
-              hint: const Text('Select service type'),
-              items: serviceTypes.map((service) {
-                return DropdownMenuItem(value: service, child: Text(service));
-              }).toList(),
-              onChanged: (value) => setState(() => serviceType = value),
-              decoration: const InputDecoration(
-                hintText: 'Select service type',
-                enabledBorder: OutlineInputBorder(),
+            buildCard(
+              icon: Icons.medical_services,
+              title: 'Service Type',
+              child: DropdownButtonFormField<String>(
+                value: serviceType,
+                hint: const Text('Select service type'),
+                items: serviceTypes
+                    .map(
+                      (service) => DropdownMenuItem(
+                        value: service,
+                        child: Text(service),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) => setState(() => serviceType = value),
+                decoration: const InputDecoration(hintText: 'Select status'),
               ),
             ),
+            const SizedBox(height: 16),
 
-            const SizedBox(height: 30),
-
-            // Date
-            Text('Select Date', style: AppTheme.headingMedium),
-            const SizedBox(height: 14),
-            buildToggleButton(
-              onPressed: pickDate,
-              text: selectedDate == null
-                  ? 'Select Date'
-                  : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
+            //Date
+            buildCard(
               icon: Icons.calendar_today,
-              isSelected: selectedDate != null,
+              title: 'Select Date',
+              child: buildDateTimeField(
+                label: 'Select Date',
+                value: selectedDate == null
+                    ? 'Select Date'
+                    : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
+                icon: Icons.calendar_today,
+                onTap: pickDate,
+              ),
             ),
+            const SizedBox(height: 16),
 
-            const SizedBox(height: 30),
-
-            // Start & End Time
-            Text('Select Time', style: AppTheme.headingMedium),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: buildToggleButton(
-                    onPressed: pickStartTime,
-                    text: startTime == null
-                        ? 'Start Time'
-                        : startTime!.format(context),
-                    icon: Icons.access_time,
-                    isSelected: startTime != null,
+            //Time
+            buildCard(
+              icon: Icons.access_time,
+              title: 'Select Time',
+              child: Row(
+                children: [
+                  Expanded(
+                    child: buildDateTimeField(
+                      label: 'Start Time',
+                      value: startTime == null
+                          ? ''
+                          : startTime!.format(context),
+                      onTap: pickStartTime,
+                      icon: Icons.access_time,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: buildToggleButton(
-                    onPressed: pickEndTime,
-                    text: endTime == null
-                        ? 'End Time'
-                        : endTime!.format(context),
-                    icon: Icons.access_time,
-                    isSelected: endTime != null,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: buildDateTimeField(
+                      label: 'End Time',
+                      value: endTime == null ? '' : endTime!.format(context),
+                      onTap: pickEndTime,
+                      icon: Icons.access_time,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+            const SizedBox(height: 16),
 
-            const SizedBox(height: 30),
-
-            // Location
-            Text('Location', style: AppTheme.headingMedium),
-            const SizedBox(height: 14),
-            TextField(
-              controller: locationController,
-              decoration: InputDecoration(
-                hintText: 'Home address or Hospital name',
+            // Location Card
+            buildCard(
+              icon: Icons.location_on,
+              title: 'Location',
+              //child: Column(
+              child: TextFormField(
+                controller: locationController,
+                decoration: const InputDecoration(hintText: 'Enter location'),
               ),
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 16),
 
-            // Notes
-            Text('Additional Notes', style: AppTheme.headingMedium),
-
-            const SizedBox(height: 14),
-            TextFormField(
-              controller: notesController,
-              maxLines: 8,
-              decoration: const InputDecoration(
-                hintText: 'Enter care status',
-                enabledBorder: OutlineInputBorder(),
+            // Notes Card
+            buildCard(
+              icon: Icons.note_alt,
+              title: 'Additional Notes',
+              child: TextFormField(
+                controller: notesController,
+                maxLines: 5,
+                decoration: const InputDecoration(
+                  hintText: 'Enter additional notes',
+                ),
               ),
             ),
             const SizedBox(height: 30),
+
+            // Request Care Button
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                ),
+                onPressed: submitRequest,
+                child: const Text('Request Care'),
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
 
-      // Submit Button
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SizedBox(
-          height: 50,
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: submitRequest,
-            child: const Text('Request Care'),
-          ),
-        ),
+      //New navigation bar
+      bottomNavigationBar: const CareReceiverNavigationBarMobile(
+        currentIndex: 1,
       ),
     );
   }

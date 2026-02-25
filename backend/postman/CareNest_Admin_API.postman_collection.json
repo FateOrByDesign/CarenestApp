@@ -1,0 +1,963 @@
+{
+  "info": {
+    "name": "CareNest Admin API",
+    "description": "Complete API collection for CareNest.lk Admin Portal backend.\n\nDefault login: admin@carenest.lk / admin123\n\nAfter login, the token is automatically saved to the collection variable {{token}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5001/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.token) {",
+                  "  pm.collectionVariables.set('token', res.token);",
+                  "  pm.test('Token saved to collection', function () {",
+                  "    pm.expect(res.token).to.be.a('string');",
+                  "  });",
+                  "}",
+                  "",
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has success, token, admin', function () {",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res).to.have.property('token');",
+                  "  pm.expect(res).to.have.property('admin');",
+                  "  pm.expect(res.admin).to.have.property('name');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@carenest.lk\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Missing Fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Returns error message', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(false);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@carenest.lk\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Wrong Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Returns invalid credentials', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(false);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@carenest.lk\",\n  \"password\": \"wrongpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Returns token and admin', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res).to.have.property('token');",
+                  "  pm.expect(res.admin.name).to.eql('Test Admin');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Admin\",\n  \"email\": \"test@carenest.lk\",\n  \"password\": \"test123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Stats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns all 4 stat counts', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res.data).to.have.property('pendingApplications');",
+                  "  pm.expect(res.data).to.have.property('totalBookings');",
+                  "  pm.expect(res.data).to.have.property('totalUsers');",
+                  "  pm.expect(res.data).to.have.property('activeCaregivers');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/stats",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Recent Applications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns array of applications', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/recent-applications",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "recent-applications"]
+            }
+          }
+        },
+        {
+          "name": "Get Recent Bookings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns array of bookings', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/recent-bookings",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "recent-bookings"]
+            }
+          }
+        },
+        {
+          "name": "Get Stats - No Token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Access denied', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(false);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard/stats",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Caregivers",
+      "item": [
+        {
+          "name": "Get All Applications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns array', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/caregivers/applications",
+              "host": ["{{base_url}}"],
+              "path": ["caregivers", "applications"]
+            }
+          }
+        },
+        {
+          "name": "Get Applications - Filter Pending",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('All results are Pending', function () {",
+                  "  const res = pm.response.json();",
+                  "  res.data.forEach(app => {",
+                  "    pm.expect(app.status).to.eql('Pending');",
+                  "  });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/caregivers/applications?status=Pending",
+              "host": ["{{base_url}}"],
+              "path": ["caregivers", "applications"],
+              "query": [{ "key": "status", "value": "Pending" }]
+            }
+          }
+        },
+        {
+          "name": "Get Applications - Search",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/caregivers/applications?search=Nimalika",
+              "host": ["{{base_url}}"],
+              "path": ["caregivers", "applications"],
+              "query": [{ "key": "search", "value": "Nimalika" }]
+            }
+          }
+        },
+        {
+          "name": "Get Application By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns application object', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res.data).to.have.property('name');",
+                  "  pm.expect(res.data).to.have.property('email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/caregivers/applications/1",
+              "host": ["{{base_url}}"],
+              "path": ["caregivers", "applications", "1"]
+            }
+          }
+        },
+        {
+          "name": "Approve Application",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Application approved', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res.message).to.include('approved');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/caregivers/applications/1/approve",
+              "host": ["{{base_url}}"],
+              "path": ["caregivers", "applications", "1", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Reject Application",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Application rejected', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res.message).to.include('rejected');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Insufficient experience and missing certifications.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/caregivers/applications/2/reject",
+              "host": ["{{base_url}}"],
+              "path": ["caregivers", "applications", "2", "reject"]
+            }
+          }
+        },
+        {
+          "name": "Reject Application - No Reason (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Reason required', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(false);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/caregivers/applications/3/reject",
+              "host": ["{{base_url}}"],
+              "path": ["caregivers", "applications", "3", "reject"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns array of users', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res.data).to.be.an('array');",
+                  "  pm.expect(res.data.length).to.be.greaterThan(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Get Users - Filter by Role",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('All results are Caregivers', function () {",
+                  "  const res = pm.response.json();",
+                  "  res.data.forEach(u => {",
+                  "    pm.expect(u.role).to.eql('Caregiver');",
+                  "  });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users?role=Caregiver",
+              "host": ["{{base_url}}"],
+              "path": ["users"],
+              "query": [{ "key": "role", "value": "Caregiver" }]
+            }
+          }
+        },
+        {
+          "name": "Get Users - Filter by Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users?status=Suspended",
+              "host": ["{{base_url}}"],
+              "path": ["users"],
+              "query": [{ "key": "status", "value": "Suspended" }]
+            }
+          }
+        },
+        {
+          "name": "Get Users - Search",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users?search=Kamal",
+              "host": ["{{base_url}}"],
+              "path": ["users"],
+              "query": [{ "key": "search", "value": "Kamal" }]
+            }
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns user object', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res.data).to.have.property('name');",
+                  "  pm.expect(res.data).to.have.property('email');",
+                  "  pm.expect(res.data).to.have.property('role');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["users", "1"]
+            }
+          }
+        },
+        {
+          "name": "Toggle User Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Status toggled', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res.data.status).to.be.oneOf(['Active', 'Suspended']);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["users", "1", "status"]
+            }
+          }
+        },
+        {
+          "name": "Get User - Not Found (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/9999",
+              "host": ["{{base_url}}"],
+              "path": ["users", "9999"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Get All Bookings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns array of bookings', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res.data).to.be.an('array');",
+                  "  pm.expect(res.data.length).to.be.greaterThan(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["bookings"]
+            }
+          }
+        },
+        {
+          "name": "Get Bookings - Filter by Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('All results are Pending', function () {",
+                  "  const res = pm.response.json();",
+                  "  res.data.forEach(b => {",
+                  "    pm.expect(b.status).to.eql('Pending');",
+                  "  });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bookings?status=Pending",
+              "host": ["{{base_url}}"],
+              "path": ["bookings"],
+              "query": [{ "key": "status", "value": "Pending" }]
+            }
+          }
+        },
+        {
+          "name": "Get Bookings - Filter by Service Type",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bookings?serviceType=Hospital",
+              "host": ["{{base_url}}"],
+              "path": ["bookings"],
+              "query": [{ "key": "serviceType", "value": "Hospital" }]
+            }
+          }
+        },
+        {
+          "name": "Get Bookings - Date Range",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bookings?from=2026-02-01&to=2026-02-28",
+              "host": ["{{base_url}}"],
+              "path": ["bookings"],
+              "query": [
+                { "key": "from", "value": "2026-02-01" },
+                { "key": "to", "value": "2026-02-28" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Booking By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns booking with nested family/caregiver', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res.data).to.have.property('family');",
+                  "  pm.expect(res.data).to.have.property('caregiver');",
+                  "  pm.expect(res.data.family).to.have.property('name');",
+                  "  pm.expect(res.data.caregiver).to.have.property('name');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bookings/BKG-10021",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "BKG-10021"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Booking Flag",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Flag toggled', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.success).to.eql(true);",
+                  "  pm.expect(res.data).to.have.property('flagged');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bookings/BKG-10021/flag",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "BKG-10021", "flag"]
+            }
+          }
+        },
+        {
+          "name": "Get Booking - Not Found (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bookings/BKG-99999",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "BKG-99999"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns ok status', function () {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.status).to.eql('ok');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
