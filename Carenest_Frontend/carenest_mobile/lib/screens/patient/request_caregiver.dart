@@ -251,7 +251,7 @@ class _RequestCarePageState extends State<RequestCarePage> {
                   backgroundColor: AppTheme.primary,
                 ),
                 onPressed: submitRequest,
-                child: const Text('Request Care'),
+                child: const Text('Request'),
               ),
             ),
             const SizedBox(height: 16),
