@@ -167,7 +167,7 @@ class _UpdateCareStatusPageState extends State<UpdateCareStatusPage> {
                   backgroundColor: AppTheme.primary,
                 ),
                 onPressed: updateCareStatus,
-                child: const Text('Update Status'),
+                child: const Text('Update'),
               ),
             ),
           ],
