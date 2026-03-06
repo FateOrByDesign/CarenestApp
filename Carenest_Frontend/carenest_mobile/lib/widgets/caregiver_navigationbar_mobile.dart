@@ -12,9 +12,12 @@ class CaregiverNavigationBarMobile extends StatelessWidget {
   void _go(BuildContext context, int index) {
     const routes = [
       '/caregiver/dashboard', // Home
+      '/caregiver/requests', // Requests
       '/caregiver/notifications', // Notifications
       '/caregiver/profile', // Profile
     ];
+
+    if (index < 0 || index >= routes.length) return;
 
     final target = routes[index];
     final current = ModalRoute.of(context)?.settings.name;
@@ -45,13 +48,18 @@ class CaregiverNavigationBarMobile extends StatelessWidget {
         }),
       ),
       child: NavigationBar(
-        selectedIndex: currentIndex,
+        selectedIndex: currentIndex.clamp(0, 3),
         onDestinationSelected: (i) => _go(context, i),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home_rounded),
             label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.assignment_outlined),
+            selectedIcon: Icon(Icons.assignment_rounded),
+            label: 'Requests',
           ),
           NavigationDestination(
             icon: Icon(Icons.notifications_none_rounded),
