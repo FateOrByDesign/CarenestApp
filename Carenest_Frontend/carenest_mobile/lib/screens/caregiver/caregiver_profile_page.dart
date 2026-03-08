@@ -1,44 +1,208 @@
 import 'package:flutter/material.dart';
-import 'package:carenest_mobile/core/app_theme.dart'; // ✅ Your existing AppTheme
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_theme.dart';
+// 1. ADDED THE IMPORT HERE
+import '../../widgets/caregiver_navigationbar_mobile.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class CaregiverProfilePage extends StatefulWidget {
+  const CaregiverProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Caregiver Profile',
-      theme: AppTheme.themeData, // ✅ Uses your AppTheme
-      home: const CaregiverProfilePage(),
-    );
+  State<CaregiverProfilePage> createState() => _CaregiverProfilePageState();
+}
+
+class _CaregiverProfilePageState extends State<CaregiverProfilePage> {
+  final supabase = Supabase.instance.client;
+  bool _isLoading = true;
+  bool _isEditing = false;
+  Map<String, dynamic>? _profile;
+  List<Map<String, dynamic>> _reviews = [];
+
+  // Edit controllers
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _serviceAreaController = TextEditingController();
+  final _aboutController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
   }
-}
 
-class CaregiverProfilePage extends StatelessWidget {
-  const CaregiverProfilePage({Key? key}) : super(key: key);
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _serviceAreaController.dispose();
+    _aboutController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final uid = supabase.auth.currentUser!.id;
+
+      final profile = await supabase
+          .from('caregiver_profiles')
+          .select()
+          .eq('auth_id', uid)
+          .single();
+
+      final caregiverId = profile['id'];
+
+      // Load reviews
+      final reviews = await supabase
+          .from('reviews')
+          .select('*, patient_profiles(name)')
+          .eq('caregiver_id', caregiverId)
+          .order('created_at', ascending: false)
+          .limit(5);
+
+      if (mounted) {
+        setState(() {
+          _profile = profile;
+          _reviews = List<Map<String, dynamic>>.from(reviews);
+          _nameController.text = profile['name'] ?? '';
+          _phoneController.text = profile['phone'] ?? '';
+          _serviceAreaController.text = profile['service_area'] ?? '';
+          _aboutController.text = profile['about'] ?? '';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    try {
+      final uid = supabase.auth.currentUser!.id;
+
+      await supabase.from('caregiver_profiles').update({
+        'name': _nameController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'service_area': _serviceAreaController.text.trim(),
+        'about': _aboutController.text.trim(),
+      }).eq('auth_id', uid);
+
+      if (mounted) {
+        setState(() {
+          _profile!['name'] = _nameController.text.trim();
+          _profile!['phone'] = _phoneController.text.trim();
+          _profile!['service_area'] = _serviceAreaController.text.trim();
+          _profile!['about'] = _aboutController.text.trim();
+          _isEditing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleLogout() async {
+    await supabase.auth.signOut();
+    if (mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Center(child: CircularProgressIndicator(color: AppTheme.primary)),
+        // 2. ADDED NAV BAR HERE
+        bottomNavigationBar: CaregiverNavigationBarMobile(currentIndex: 2),
+      );
+    }
+
+    if (_profile == null) {
+      return Scaffold(
+        backgroundColor: AppTheme.background,
+        appBar: AppBar(
+          backgroundColor: AppTheme.primary,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: const Center(child: Text('Profile not found')),
+        // 3. ADDED NAV BAR HERE
+        bottomNavigationBar: const CaregiverNavigationBarMobile(currentIndex: 2),
+      );
+    }
+
+    final p = _profile!;
+    final name = p['name'] ?? 'Caregiver';
+    final verified = p['verified'] == true;
+    final rating = double.tryParse(p['rating']?.toString() ?? '0') ?? 0;
+    final experience = p['experience_years']?.toString() ?? '0';
+    final totalPatients = p['total_patients']?.toString() ?? '0';
+    final onTimeRate =
+        double.tryParse(p['on_time_rate']?.toString() ?? '0') ?? 0;
+    final completionRate =
+        double.tryParse(p['completion_rate']?.toString() ?? '0') ?? 0;
+    final satisfactionRating =
+        double.tryParse(p['satisfaction_rating']?.toString() ?? '0') ?? 0;
+    final responseTime = p['response_time'] ?? 'N/A';
+    final about = p['about'] ?? '';
+    final hourlyRate = p['hourly_rate']?.toString() ?? '0';
+
     return Scaffold(
+      backgroundColor: AppTheme.background,
+      // 4. ADDED NAV BAR TO THE MAIN UI HERE
+      bottomNavigationBar: const CaregiverNavigationBarMobile(currentIndex: 2),
       body: CustomScrollView(
         slivers: [
-          // ── App Bar ──────────────────────────────────────────────
+          // App Bar
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
-            backgroundColor: AppTheme.primary, // ✅ AppTheme color
+            backgroundColor: AppTheme.primary,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () {},
+              onPressed: () => Navigator.pop(context),
             ),
             actions: [
-              IconButton(icon: const Icon(Icons.edit, color: Colors.white), onPressed: () {}),
-              IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: () {}),
+              IconButton(
+                icon: Icon(
+                  _isEditing ? Icons.close : Icons.edit,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  setState(() {
+                    if (_isEditing) {
+                      // Cancel editing - restore values
+                      _nameController.text = p['name'] ?? '';
+                      _phoneController.text = p['phone'] ?? '';
+                      _serviceAreaController.text = p['service_area'] ?? '';
+                      _aboutController.text = p['about'] ?? '';
+                    }
+                    _isEditing = !_isEditing;
+                  });
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout, color: Colors.white),
+                onPressed: _handleLogout,
+              ),
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
@@ -46,10 +210,7 @@ class CaregiverProfilePage extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      AppTheme.primary,     // ✅ AppTheme color
-                      AppTheme.primaryDark, // ✅ AppTheme color
-                    ],
+                    colors: [AppTheme.primary, AppTheme.primaryDark],
                   ),
                 ),
                 child: Column(
@@ -62,69 +223,75 @@ class CaregiverProfilePage extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 4),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
                           ),
-                          child: const CircleAvatar(
+                          child: CircleAvatar(
                             radius: 50,
-                            backgroundImage: NetworkImage('https://via.placeholder.com/150'),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(
-                              color: Colors.green,
-                              shape: BoxShape.circle,
-                              boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                            backgroundColor: AppTheme.softGreen,
+                            child: Text(
+                              name[0].toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 40,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primary,
+                              ),
                             ),
-                            child: const Icon(Icons.check, color: Colors.white, size: 16),
                           ),
                         ),
+                        if (verified)
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Colors.green,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.check,
+                                  color: Colors.white, size: 16),
+                            ),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    // ✅ AppTheme text style
-                    const Text('Kavindu Rathnayake', style: AppTheme.headingLarge),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(Icons.verified, color: Colors.white, size: 16),
-                          SizedBox(width: 4),
-                          Text(
-                            'VERIFIED CAREGIVER',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+                    Text(
+                      name,
+                      style: AppTheme.headingLarge
+                          .copyWith(color: Colors.white, fontSize: 22),
                     ),
+                    const SizedBox(height: 4),
+                    if (verified)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.verified,
+                                color: Colors.white, size: 16),
+                            SizedBox(width: 4),
+                            Text('VERIFIED CAREGIVER',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 20,
+                      runSpacing: 10,
                       children: [
-                        _buildQuickStat(Icons.star, '4.9'),
-                        const SizedBox(width: 24),
-                        _buildQuickStat(Icons.work, '3 Years'),
-                        const SizedBox(width: 24),
-                        _buildQuickStat(Icons.people, '45 Patients'),
+                        _buildQuickStat(Icons.star, '$rating'),
+                        _buildQuickStat(Icons.work, '$experience Years'),
+                        _buildQuickStat(
+                            Icons.people, '$totalPatients Patients'),
                       ],
                     ),
                   ],
@@ -133,145 +300,154 @@ class CaregiverProfilePage extends StatelessWidget {
             ),
           ),
 
-          // ── Body Content ─────────────────────────────────────────
+          // Body Content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Edit mode save button
+                  if (_isEditing) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _saveProfile,
+                        icon: const Icon(Icons.save),
+                        label: const Text('Save Changes'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
-                  // Stats Cards Row
+                  // Stats
                   Row(
                     children: [
                       Expanded(
-                        child: _buildStatCard('This Month', 'LKR 45k', Icons.account_balance_wallet, AppTheme.primary),
+                        child: _buildStatCard(
+                            'Hourly Rate',
+                            'LKR $hourlyRate',
+                            Icons.account_balance_wallet,
+                            AppTheme.primary),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _buildStatCard('Today\'s Visits', '2', Icons.event, Colors.orange),
+                        child: _buildStatCard('Experience', '$experience yrs',
+                            Icons.work_history, Colors.orange),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
 
                   // About
-                  // ✅ AppTheme text style
-                  const Text('About Me', style: AppTheme.headingMedium),
+                  Text('About Me', style: AppTheme.headingMedium),
                   const SizedBox(height: 12),
-                  _buildCard(
+                  _isEditing
+                      ? _buildCard(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Text(
-                        'Experienced and compassionate caregiver with 3+ years of experience providing quality care to elderly and special needs patients. Specialized in diabetes management, post-surgery care, and daily living assistance.',
-                        style: AppTheme.bodyText, // ✅ AppTheme text style
+                      child: TextField(
+                        controller: _aboutController,
+                        maxLines: 4,
+                        style: AppTheme.bodyText.copyWith(
+                            color: AppTheme.textDark,
+                            fontWeight: FontWeight.w500),
+                        decoration: InputDecoration(
+                          hintText: 'Tell patients about yourself...',
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                                color:
+                                AppTheme.primary.withOpacity(0.3)),
+                          ),
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide:
+                            BorderSide(color: AppTheme.primary),
+                          ),
+                        ),
                       ),
+                    ),
+                  )
+                      : about.isNotEmpty
+                      ? _buildCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child:
+                      Text(about, style: AppTheme.bodyText),
+                    ),
+                  )
+                      : _buildCard(
+                    child: const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text('No bio added yet',
+                          style: TextStyle(color: Colors.grey)),
                     ),
                   ),
                   const SizedBox(height: 24),
 
                   // Personal Information
-                  const Text('Personal Information', style: AppTheme.headingMedium),
+                  Text('Personal Information', style: AppTheme.headingMedium),
                   const SizedBox(height: 12),
                   _buildCard(
                     child: Column(
                       children: [
-                        _buildInfoRow(Icons.person,       'Full Name',      'Kavindu Rathnayake'),
-                        _buildInfoRow(Icons.badge,        'License Number', 'CG-2021-7845'),
-                        _buildInfoRow(Icons.phone,        'Phone',          '+94 77 123 4567'),
-                        _buildInfoRow(Icons.email,        'Email',          'kavindu.r@healthcare.lk'),
-                        _buildInfoRow(Icons.location_on,  'Service Area',   'Colombo District'),
-                        _buildInfoRow(Icons.calendar_today,'Joined',        'January 2021'),
+                        _isEditing
+                            ? _buildEditRow(
+                            Icons.person, 'Full Name', _nameController)
+                            : _buildInfoRow(Icons.person, 'Full Name', name),
+                        _buildInfoRow(Icons.badge, 'License Number',
+                            p['license_number'] ?? 'N/A'),
+                        _isEditing
+                            ? _buildEditRow(
+                            Icons.phone, 'Phone', _phoneController)
+                            : _buildInfoRow(
+                            Icons.phone, 'Phone', p['phone'] ?? 'N/A'),
+                        _buildInfoRow(
+                            Icons.email, 'Email', p['email'] ?? 'N/A'),
+                        _isEditing
+                            ? _buildEditRow(Icons.location_on, 'Service Area',
+                            _serviceAreaController)
+                            : _buildInfoRow(Icons.location_on, 'Service Area',
+                            p['service_area'] ?? 'N/A'),
+                        _buildInfoRow(
+                            Icons.calendar_today,
+                            'Joined',
+                            p['created_at']?.toString().split('T')[0] ??
+                                'N/A'),
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  // Specializations
-                  const Text('Specializations', style: AppTheme.headingMedium),
-                  const SizedBox(height: 12),
-                  _buildCard(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          'Diabetes Care',
-                          'Elderly Care',
-                          'Post-Surgery Care',
-                          'Wound Dressing',
-                          'Medication Management',
-                          'Physical Therapy Support',
-                        ].map((item) => _buildChip(item)).toList(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Certifications
-                  const Text('Certifications', style: AppTheme.headingMedium),
-                  const SizedBox(height: 12),
-                  _buildCertCard('Certified Nursing Assistant (CNA)', 'Sri Lanka Medical Council', 'Valid until Dec 2026', Icons.workspace_premium),
-                  const SizedBox(height: 8),
-                  _buildCertCard('First Aid & CPR', 'Red Cross Society', 'Valid until Jun 2025', Icons.medical_services),
-                  const SizedBox(height: 8),
-                  _buildCertCard('Diabetes Care Specialist', 'Healthcare Institute', 'Issued Jan 2023', Icons.health_and_safety),
-                  const SizedBox(height: 24),
-
-                  // Languages
-                  const Text('Languages', style: AppTheme.headingMedium),
-                  const SizedBox(height: 12),
-                  _buildCard(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          _buildLanguageRow('Sinhala', 'Native'),
-                          const SizedBox(height: 12),
-                          _buildLanguageRow('English', 'Fluent'),
-                          const SizedBox(height: 12),
-                          _buildLanguageRow('Tamil', 'Conversational'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Availability
-                  const Text('Availability', style: AppTheme.headingMedium),
-                  const SizedBox(height: 12),
-                  _buildCard(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          _buildAvailabilityRow('Monday - Friday', '8:00 AM - 6:00 PM', true),
-                          const Divider(height: 24),
-                          _buildAvailabilityRow('Saturday', '9:00 AM - 3:00 PM', true),
-                          const Divider(height: 24),
-                          _buildAvailabilityRow('Sunday', 'Not Available', false),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
                   // Performance Metrics
-                  const Text('Performance Metrics', style: AppTheme.headingMedium),
+                  Text('Performance Metrics', style: AppTheme.headingMedium),
                   const SizedBox(height: 12),
                   _buildCard(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          _buildMetricRow('On-time Rate',        '98%',    0.98, Colors.green),
+                          _buildMetricRow('On-time Rate',
+                              '${onTimeRate.toInt()}%', onTimeRate / 100, Colors.green),
                           const SizedBox(height: 16),
-                          _buildMetricRow('Completion Rate',     '100%',   1.0,  AppTheme.primary),
+                          _buildMetricRow(
+                              'Completion Rate',
+                              '${completionRate.toInt()}%',
+                              completionRate / 100,
+                              AppTheme.primary),
                           const SizedBox(height: 16),
-                          _buildMetricRow('Patient Satisfaction','4.9/5.0',0.98, Colors.orange),
+                          _buildMetricRow(
+                              'Patient Satisfaction',
+                              '$satisfactionRating/5.0',
+                              satisfactionRating / 5,
+                              Colors.orange),
                           const SizedBox(height: 16),
-                          _buildMetricRow('Response Time',       '< 5 min',0.95, Colors.blue),
+                          _buildMetricRow('Response Time', responseTime,
+                              0.95, Colors.blue),
                         ],
                       ),
                     ),
@@ -279,25 +455,48 @@ class CaregiverProfilePage extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Reviews
-                  const Text('Patient Reviews', style: AppTheme.headingMedium),
+                  Text('Patient Reviews', style: AppTheme.headingMedium),
                   const SizedBox(height: 12),
-                  _buildReviewCard('Mrs. K. Silva',   5, 'Jan 20, 2026', 'Excellent care and very professional. Kavindu is patient, kind, and always on time. Highly recommended!'),
-                  const SizedBox(height: 8),
-                  _buildReviewCard('Mr. R. Fernando', 5, 'Jan 15, 2026', 'Very knowledgeable about diabetes management. Helped me understand my condition better.'),
-                  const SizedBox(height: 8),
-                  _buildReviewCard('Mrs. A. Perera',  4, 'Jan 10, 2026', 'Great caregiver with good communication skills. Very satisfied with the service.'),
+                  if (_reviews.isEmpty)
+                    _buildCard(
+                      child: const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Center(child: Text('No reviews yet')),
+                      ),
+                    )
+                  else
+                    ..._reviews.map((r) {
+                      final reviewerName =
+                          r['patient_profiles']?['name'] ?? 'Patient';
+                      final ratingVal =
+                          double.tryParse(r['rating']?.toString() ?? '0') ??
+                              0;
+                      final comment = r['comment'] ?? '';
+                      final date =
+                          r['created_at']?.toString().split('T')[0] ?? '';
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _buildReviewCard(
+                            reviewerName, ratingVal.round(), date, comment),
+                      );
+                    }),
+
                   const SizedBox(height: 24),
 
-                  // Documents
-                  const Text('Documents', style: AppTheme.headingMedium),
-                  const SizedBox(height: 12),
-                  _buildDocumentCard('National ID',           Icons.credit_card),
-                  const SizedBox(height: 8),
-                  _buildDocumentCard('Medical License',       Icons.medical_information),
-                  const SizedBox(height: 8),
-                  _buildDocumentCard('Background Check',      Icons.verified_user),
-                  const SizedBox(height: 8),
-                  _buildDocumentCard('Insurance Certificate', Icons.security),
+                  // Logout button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _handleLogout,
+                      icon: const Icon(Icons.logout, color: AppTheme.error),
+                      label: const Text('Logout',
+                          style: TextStyle(color: AppTheme.error)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.error),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -305,70 +504,44 @@ class CaregiverProfilePage extends StatelessWidget {
           ),
         ],
       ),
-
-      // ── Bottom Bar ───────────────────────────────────────────────
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -2)),
-          ],
-        ),
-        child: SafeArea(
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.message),
-                  label: const Text('Message'),
-                  // ✅ Auto-styled by AppTheme via ThemeData
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.share),
-                  label: const Text('Share Profile'),
-                  // ✅ Auto-styled by AppTheme — Green, White text, Rounded corners
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
-  // ── Helper Widgets ───────────────────────────────────────────────
+  // ── Helper Widgets ──────────────────────────
 
   Widget _buildQuickStat(IconData icon, String label) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, color: Colors.white, size: 16),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
+        Text(label,
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500)),
       ],
     );
   }
 
-  /// Generic white card wrapper
   Widget _buildCard({required Widget child}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+          BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 2)),
         ],
       ),
       child: child,
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String label, String value, IconData icon, Color color) {
     return _buildCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -379,15 +552,23 @@ class CaregiverProfilePage extends StatelessWidget {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 24),
             ),
             const SizedBox(height: 12),
-            // ✅ AppTheme text style
-            Text(label, style: AppTheme.labelSmall),
+            Text(label,
+                style: AppTheme.bodyText.copyWith(fontSize: 12)),
             const SizedBox(height: 4),
-            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color)),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(value,
+                  style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                      fontFamily: 'Poppins')),
+            ),
           ],
         ),
       ),
@@ -398,26 +579,31 @@ class CaregiverProfilePage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey[200]!, width: 1)),
+        border:
+        Border(bottom: BorderSide(color: Colors.grey[100]!, width: 1)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.primaryLight, // ✅ AppTheme color
-              borderRadius: BorderRadius.circular(8),
+              color: AppTheme.softGreen,
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, size: 20, color: AppTheme.primary), // ✅ AppTheme color
+            child: Icon(icon, size: 20, color: AppTheme.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: AppTheme.labelSmall),   // ✅ AppTheme text style
+                Text(label,
+                    style: AppTheme.bodyText.copyWith(fontSize: 12)),
                 const SizedBox(height: 2),
-                Text(value, style: AppTheme.bodyMedium),   // ✅ AppTheme text style
+                Text(value,
+                    style: AppTheme.bodyText.copyWith(
+                        color: AppTheme.textDark,
+                        fontWeight: FontWeight.w500)),
               ],
             ),
           ),
@@ -426,109 +612,80 @@ class CaregiverProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildChip(String label) {
+  Widget _buildEditRow(
+      IconData icon, String label, TextEditingController controller) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.1), // ✅ AppTheme color
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.primary, width: 1), // ✅ AppTheme color
+        border:
+        Border(bottom: BorderSide(color: Colors.grey[100]!, width: 1)),
       ),
-      child: Text(label, style: AppTheme.chipText), // ✅ AppTheme text style
-    );
-  }
-
-  Widget _buildCertCard(String name, String issuer, String validity, IconData icon) {
-    return _buildCard(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryLight, // ✅ AppTheme color
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: AppTheme.primary, size: 24), // ✅ AppTheme color
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.softGreen,
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name,     style: AppTheme.bodyMedium),  // ✅ AppTheme text style
-                  const SizedBox(height: 4),
-                  Text(issuer,   style: AppTheme.bodySmall),   // ✅ AppTheme text style
-                  const SizedBox(height: 2),
-                  Text(validity, style: AppTheme.labelSmall),  // ✅ AppTheme text style
-                ],
-              ),
+            child: Icon(icon, size: 20, color: AppTheme.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: AppTheme.bodyText.copyWith(fontSize: 12)),
+                const SizedBox(height: 4),
+                TextField(
+                  controller: controller,
+                  style: AppTheme.bodyText.copyWith(
+                      color: AppTheme.textDark,
+                      fontWeight: FontWeight.w500),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding:
+                    const EdgeInsets.symmetric(vertical: 8),
+                    border: UnderlineInputBorder(
+                      borderSide: BorderSide(
+                          color: AppTheme.primary.withOpacity(0.3)),
+                    ),
+                    focusedBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: AppTheme.primary),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            Icon(Icons.chevron_right, color: Colors.grey[400]),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildLanguageRow(String language, String proficiency) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppTheme.primaryLight, // ✅ AppTheme color
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(Icons.language, size: 20, color: AppTheme.primary), // ✅ AppTheme color
-        ),
-        const SizedBox(width: 12),
-        Expanded(child: Text(language, style: AppTheme.bodyMedium)), // ✅ AppTheme text style
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppTheme.primaryLight,       // ✅ AppTheme color
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(proficiency, style: AppTheme.primaryLabel), // ✅ AppTheme text style
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAvailabilityRow(String day, String time, bool available) {
-    return Row(
-      children: [
-        Icon(
-          available ? Icons.check_circle : Icons.cancel,
-          color: available ? Colors.green : Colors.red,
-          size: 20,
-        ),
-        const SizedBox(width: 12),
-        Expanded(child: Text(day,  style: AppTheme.bodyMedium)), // ✅ AppTheme text style
-        Text(time, style: AppTheme.bodySmall),                   // ✅ AppTheme text style
-      ],
-    );
-  }
-
-  Widget _buildMetricRow(String label, String value, double progress, Color color) {
+  Widget _buildMetricRow(
+      String label, String value, double progress, Color color) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: AppTheme.bodyMedium), // ✅ AppTheme text style
-            Text(value, style: TextStyle(fontSize: 14, color: color, fontWeight: FontWeight.bold)),
+            Text(label,
+                style: AppTheme.bodyText.copyWith(
+                    color: AppTheme.textDark, fontWeight: FontWeight.w500)),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 14, color: color, fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 8),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
-            value: progress,
-            backgroundColor: Colors.grey[200],
+            value: progress.clamp(0.0, 1.0),
+            backgroundColor: Colors.grey[100],
             valueColor: AlwaysStoppedAnimation<Color>(color),
             minHeight: 6,
           ),
@@ -537,7 +694,8 @@ class CaregiverProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildReviewCard(String name, int rating, String date, String review) {
+  Widget _buildReviewCard(
+      String name, int rating, String date, String review) {
     return _buildCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -548,74 +706,43 @@ class CaregiverProfilePage extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: AppTheme.primaryLight, // ✅ AppTheme color
-                  child: Text(
-                    name[0],
-                    style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
-                  ),
+                  backgroundColor: AppTheme.softGreen,
+                  child: Text(name[0],
+                      style: const TextStyle(
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: AppTheme.bodyMedium),  // ✅ AppTheme text style
+                      Text(name,
+                          style: AppTheme.bodyText.copyWith(
+                              color: AppTheme.textDark,
+                              fontWeight: FontWeight.w600)),
                       const SizedBox(height: 2),
-                      Text(date, style: AppTheme.labelSmall),  // ✅ AppTheme text style
+                      Text(date,
+                          style:
+                          AppTheme.bodyText.copyWith(fontSize: 12)),
                     ],
                   ),
                 ),
                 Row(
-                  children: List.generate(5, (i) => Icon(
-                    i < rating ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                    size: 16,
-                  )),
+                  children: List.generate(
+                      5,
+                          (i) => Icon(
+                        i < rating ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 16,
+                      )),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Text(review, style: AppTheme.bodyText), // ✅ AppTheme text style
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDocumentCard(String title, IconData icon) {
-    return _buildCard(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryLight, // ✅ AppTheme color
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: AppTheme.primary, size: 24), // ✅ AppTheme color
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(title, style: AppTheme.bodyMedium)), // ✅ AppTheme text style
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.check_circle, size: 14, color: Colors.green),
-                  SizedBox(width: 4),
-                  Text(
-                    'Verified',
-                    style: TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
+            if (review.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(review, style: AppTheme.bodyText),
+            ],
           ],
         ),
       ),
