@@ -1,3 +1,5 @@
+import 'package:carenest_mobileapp/screens/caregiver/caregiver_register_page.dart';
+import 'package:carenest_mobileapp/screens/patient/patient_register_page.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../core/role_storage.dart';
@@ -88,7 +90,7 @@ class RoleSelectPage extends StatelessWidget {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const CaregiverDashboardPage(),
+                        builder: (_) => const RegisterCaregiverScreen(),
                       ),
                     );
                   },
@@ -106,7 +108,7 @@ class RoleSelectPage extends StatelessWidget {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const CareReceiverDashboardPage(),
+                        builder: (_) => const RegisterPatientScreen(),
                       ),
                     );
                   },
@@ -134,7 +136,7 @@ class RoleSelectPage extends StatelessWidget {
                           ),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
-                              // TODO: navigate to login page
+                              Navigator.pushNamed(context, '/login');
                             },
                         ),
                       ],

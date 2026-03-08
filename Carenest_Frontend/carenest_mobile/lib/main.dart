@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/app_theme.dart';
+
 // main screens
 import 'screens/login_screen.dart';
 import 'screens/splash_screen.dart';
@@ -10,6 +13,7 @@ import 'screens/patient/carereceiver_dashboard_page.dart';
 import 'screens/patient/patient_details.dart';
 import 'screens/patient/request_caregiver.dart';
 import 'screens/patient/patient_notification_page.dart';
+import 'screens/caregiver/caregiver_job_page.dart';
 // caregiver screens
 import 'screens/caregiver/caregiver_register_page.dart';
 import 'screens/caregiver/caregiver_profile_page.dart';
@@ -17,11 +21,23 @@ import 'screens/caregiver/caregiver_dashboard_page.dart';
 import 'screens/caregiver/caregiver_details.dart';
 import 'screens/caregiver/update_caregiver_status.dart';
 import 'screens/caregiver/caregiver_notification_page.dart';
-import 'package:carenest_mobileapp/screens/caregiver/caregiver_authentication_page.dart';
+import 'screens/caregiver/schedule_page.dart';
 // common screens
 import 'pages/role_select_page.dart';
 
-void main() {
+// Global Supabase client variable to use anywhere in app
+final supabase = Supabase.instance.client;
+
+Future<void> main() async {
+  // Ensure Flutter is ready
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize your Supabase database connection
+  await Supabase.initialize(
+    url: 'https://kpavgqkksmeskrvyhjuj.supabase.co',
+    anonKey: 'sb_publishable__uM8woW2XUtC_RyaFCUMlA_J4Hm3-yC',
+  );
+
   runApp(const CareNestApp());
 }
 
@@ -32,12 +48,8 @@ class CareNestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CareNest',
-      theme: ThemeData(primarySwatch: Colors.teal),
-      home: CaregiverAuthenticationPage(
-        username: 'perera', // your custom username
-        password: '12345', // your custom password
-      ),
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
 
       // --- Initial Route ---
       initialRoute: '/',
@@ -45,26 +57,26 @@ class CareNestApp extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
-        '/reset-password': (context) => const ResetPasswordScreen(),
-        '/select-role': (context) => const RoleSelectPage(),
+        '/reset_password': (context) => const ResetPasswordScreen(),
+        '/role_select': (context) => const RoleSelectPage(),
 
         // --- Patient Routes ---
-        '/patient/register': (context) => const RegisterPatientScreen(),
-        '/patient/profile': (context) => const PatientProfilePage(),
-        '/patient/dashboard': (context) => const CareReceiverDashboardPage(),
-        '/patient/details': (context) => const PatientDetailsPage(),
-        '/patient/request-caregiver': (context) => const RequestCarePage(),
-        '/patient/notifications': (context) => const PatientNotificationsPage(),
+        '/patient_register': (context) => const RegisterPatientScreen(),
+        '/patient_profile': (context) => const PatientProfilePage(),
+        '/patient_dashboard': (context) => const CareReceiverDashboardPage(),
+        '/patient_details': (context) => const PatientDetailsPage(),
+        '/patient_request-caregiver': (context) => const RequestCarePage(),
+        '/patient_notifications': (context) => const PatientNotificationsPage(),
 
         // --- Caregiver Routes ---
-        '/caregiver/register': (context) => const RegisterCaregiverScreen(),
-        '/caregiver/profile': (context) => const CaregiverProfilePage(),
-        '/caregiver/profile': (context) => const CaregiverProfilePage(),
-        '/caregiver/dashboard': (context) => const CaregiverDashboardPage(),
-        '/caregiver/details': (context) => const CaregiverDetailsPage(),
-        '/caregiver/notifications': (context) =>
-            const CaregiverNotificationsPage(),
-        // '/caregiver/update-status': (context) => const UpdateCareStatusPage(),
+        '/caregiver_register': (context) => const RegisterCaregiverScreen(),
+        '/caregiver_profile': (context) => const CaregiverProfilePage(),
+        '/caregiver_dashboard': (context) => const CaregiverDashboardPage(),
+        '/caregiver_details': (context) => const CaregiverDetailsPage(),
+        '/caregiver_notifications': (context) => const CaregiverNotificationsPage(),
+        '/caregiver_schedule': (context) => const SchedulePage(),
+        '/caregiver_update-status': (context) => const UpdateCareStatusPage(),
+        '/caregiver_job': (context) => const CaregiverJobRequestsPage()
       },
     );
   }

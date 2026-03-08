@@ -5,3 +5,15 @@ node_modules/
 *.db-wal
 .DS_Store
 build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.gradle/
+local.properties
+*.iml
+.idea/
+.vscode/
+ephemeral/
+Podfile.lock
+Generated.xcconfig
+flutter_export_environment.sh

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/app_theme.dart';
 
 class RegisterPatientScreen extends StatefulWidget {
@@ -11,6 +12,90 @@ class RegisterPatientScreen extends StatefulWidget {
 class _RegisterPatientScreenState extends State<RegisterPatientScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isObscure = true;
+  bool _isLoading = false;
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  final supabase = Supabase.instance.client;
+
+  Future<void> _handleRegister() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        // 1. Create Supabase Auth user
+        final AuthResponse res = await supabase.auth.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          data: {'role': 'patient'},
+        );
+
+        final user = res.user;
+
+        if (user != null && mounted) {
+          // 2. Insert profile row into patient_profiles
+          await supabase.from('patient_profiles').insert({
+            'auth_id': user.id,
+            'name': _nameController.text.trim(),
+            'email': _emailController.text.trim(),
+            'phone': _phoneController.text.trim(),
+          });
+
+          // 3. Sign out so user logs in fresh through login screen
+          await supabase.auth.signOut();
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Account created successfully! Please log in.'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Navigator.pushReplacementNamed(context, '/login');
+          }
+        }
+      } on AuthException catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $error'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 8),
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +124,7 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen> {
 
                 // --- 1. Full Name ---
                 TextFormField(
+                  controller: _nameController,
                   decoration: const InputDecoration(
                     labelText: "Your Name",
                     prefixIcon: Icon(Icons.person_outline),
@@ -49,6 +135,7 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen> {
 
                 // --- 2. Phone Number ---
                 TextFormField(
+                  controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
                     labelText: "Phone Number",
@@ -56,9 +143,11 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen> {
                   ),
                   validator: (v) => v!.isEmpty ? "Phone is required" : null,
                 ),
+                const SizedBox(height: 20),
 
-                // --- 2. Email ---
+                // --- 3. Email ---
                 TextFormField(
+                  controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     labelText: "Email Address",
@@ -68,8 +157,9 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // --- 3. Password ---
+                // --- 4. Password ---
                 TextFormField(
+                  controller: _passwordController,
                   obscureText: _isObscure,
                   decoration: InputDecoration(
                     labelText: "Create Password",
@@ -83,18 +173,19 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // --- 4. Submit Button ---
+                // --- 5. Submit Button ---
                 ElevatedButton(
-                  
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.surface,
-                  ),
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      Navigator.pushNamed(context, '/patient_dashboard');
-                    }
-                  },
-                  child: const Text("Create Patient Account"),
+                  onPressed: _isLoading ? null : _handleRegister,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text("Create Patient Account"),
                 ),
               ],
             ),

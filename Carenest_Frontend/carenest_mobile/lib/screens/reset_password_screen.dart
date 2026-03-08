@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/app_theme.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
@@ -11,22 +12,65 @@ class ResetPasswordScreen extends StatefulWidget {
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
-  void _handleReset() {
+  final supabase = Supabase.instance.client;
+
+  Future<void> _handleReset() async {
     if (_formKey.currentState!.validate()) {
-      // Simulate sending email
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Reset link sent! Check your email."),
-          backgroundColor: AppTheme.primary,
-        ),
-      );
-
-      //Go back to login after a delay
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) Navigator.pop(context);
+      setState(() {
+        _isLoading = true;
       });
+
+      try {
+        await supabase.auth.resetPasswordForEmail(
+          _emailController.text.trim(),
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Reset link sent! Check your email."),
+              backgroundColor: AppTheme.primary,
+            ),
+          );
+
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) Navigator.pop(context);
+          });
+        }
+      } on AuthException catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('An unexpected error occurred'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
   }
 
   @override
@@ -66,14 +110,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // Following the same style as LoginScreen for consistency
                 Text(
                   "Forgot Password?",
                   textAlign: TextAlign.center,
                   style: AppTheme.headingLarge,
                 ),
                 const SizedBox(height: 12),
-                // when user clicks on forgot password, they will be taken to this screen where they can enter their email to receive a reset link
                 Text(
                   "Please enter the email associated with your account.",
                   textAlign: TextAlign.center,
@@ -91,12 +133,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     prefixIcon: Icon(Icons.email_outlined),
                   ),
                   validator: (value) {
-                    // Reusing the same validation logic as LoginScreen for consistency
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
                     }
                     if (!value.contains('@')) {
-                      //If the email doesn't contain an "@" sign, it's not valid
                       return 'Invalid email address';
                     }
                     return null;
@@ -106,8 +146,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
                 // --- SEND BUTTON ---
                 ElevatedButton(
-                  onPressed: _handleReset,
-                  child: const Text("Send Reset Link"),
+                  onPressed: _isLoading ? null : _handleReset,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text("Send Reset Link"),
                 ),
               ],
             ),
