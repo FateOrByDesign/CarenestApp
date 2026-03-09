@@ -227,6 +227,212 @@ class _CaregiverSearchPageState extends State<CaregiverSearchPage> {
     return count;
   }
 
+  Widget buildCaregiverCard(Map<String, dynamic> caregiver) {
+    bool isExpanded = expandedName == caregiver['name'];
+
+    final rating = caregiver['calculated_rating'] as double;
+    final ratingDisplay = rating > 0 ? rating.toStringAsFixed(1) : '0.0';
+
+    final experience = caregiver['experience_years'] ?? 0;
+    final patients = caregiver['total_patients'] ?? 0;
+    final gender = caregiver['gender'] as String?;
+    final caregiverId = caregiver['id'];
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          expandedName = isExpanded ? null : caregiver['name'];
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: AppTheme.softGreen,
+                    child: Text(
+                      (caregiver['name'] ?? 'C')[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: AppTheme.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          caregiver['name'] ?? 'Caregiver',
+                          style:
+                              AppTheme.headingMedium.copyWith(fontSize: 16),
+                        ),
+                        Row(
+                          children: [
+                            if (caregiver['service_area'] != null) ...[
+                              const Icon(Icons.location_on,
+                                  size: 14, color: AppTheme.primary),
+                              const SizedBox(width: 2),
+                              Text(
+                                caregiver['service_area'],
+                                style: AppTheme.bodyText
+                                    .copyWith(fontSize: 12),
+                              ),
+                            ],
+                            if (gender != null &&
+                                gender.isNotEmpty) ...[
+                              const SizedBox(width: 8),
+                              Icon(
+                                gender == 'Male'
+                                    ? Icons.male
+                                    : gender == 'Female'
+                                        ? Icons.female
+                                        : Icons.transgender,
+                                size: 14,
+                                color: Colors.grey[600],
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                gender,
+                                style: AppTheme.bodyText
+                                    .copyWith(fontSize: 12),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      const Icon(Icons.star,
+                          color: Colors.amber, size: 18),
+                      const SizedBox(width: 4),
+                      Text(
+                        ratingDisplay,
+                        style: AppTheme.bodyText
+                            .copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              if (isExpanded) ...[
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    SizedBox(
+                        width: 100,
+                        child: Text('Experience',
+                            style: AppTheme.bodyText
+                                .copyWith(color: Colors.grey[600]))),
+                    Text('$experience years',
+                        style: AppTheme.bodyText
+                            .copyWith(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    SizedBox(
+                        width: 100,
+                        child: Text('Patients',
+                            style: AppTheme.bodyText
+                                .copyWith(color: Colors.grey[600]))),
+                    Text('$patients',
+                        style: AppTheme.bodyText
+                            .copyWith(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                if (gender != null && gender.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      SizedBox(
+                          width: 100,
+                          child: Text('Gender',
+                              style: AppTheme.bodyText
+                                  .copyWith(color: Colors.grey[600]))),
+                      Text(gender,
+                          style: AppTheme.bodyText
+                              .copyWith(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
+                if (caregiver['hourly_rate'] != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      SizedBox(
+                          width: 100,
+                          child: Text('Rate',
+                              style: AppTheme.bodyText
+                                  .copyWith(color: Colors.grey[600]))),
+                      Text('LKR ${caregiver['hourly_rate']}/hr',
+                          style: AppTheme.bodyText
+                              .copyWith(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/caregiver_details',
+                            arguments: caregiverId,
+                          );
+                        },
+                        child: const Text('View Profile'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/patient_request-caregiver',
+                            arguments: caregiverId,
+                          );
+                        },
+                        child: const Text('Book'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
