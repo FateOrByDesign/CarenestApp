@@ -45,12 +45,239 @@ class CaregiverDashboardPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 18),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _StatCard(
+                    title: "Today's visits",
+                    value: '2',
+                    valueColor: _textDark,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: _StatCard(
+                    title: 'This month',
+                    value: 'LKR 5000',
+                    valueColor: _primary,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 18),
+
+            const _NextVisitCard(),
+
+            const SizedBox(height: 18),
           ],
         ),
       ),
 
       // ✅ EASY APPLY: just this line
       bottomNavigationBar: const CaregiverNavigationBarMobile(currentIndex: 0),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final Color valueColor;
+
+  static const _cardBorder = Color(0xFFE7EEF0);
+  static const _textSoft = Color(0xFF7A8A96);
+
+  const _StatCard({
+    required this.title,
+    required this.value,
+    required this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 110,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: _cardBorder),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: _textSoft,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              color: valueColor,
+              letterSpacing: -0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NextVisitCard extends StatelessWidget {
+  static const _primary = Color(0xFF16A394);
+  static const _textSoftOnDark = Color(0xFFA9C2BE);
+
+  const _NextVisitCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 185,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0E3C3A), Color(0xFF062C2B)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 26,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -6,
+            top: 28,
+            child: Icon(
+              Icons.access_time_rounded,
+              size: 92,
+              color: Colors.white.withOpacity(0.10),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'NEXT VISIT',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.1,
+                  color: _primary.withOpacity(0.85),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: Colors.white.withOpacity(0.14)),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'JP',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Mr. J. Perera',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Today, 2:30 PM',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: _textSoftOnDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: const [
+                  Icon(
+                    Icons.location_on_outlined,
+                    size: 18,
+                    color: _textSoftOnDark,
+                  ),
+                  SizedBox(width: 6),
+                  Text(
+                    'Colombo 05',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: _textSoftOnDark,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Start visit',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
