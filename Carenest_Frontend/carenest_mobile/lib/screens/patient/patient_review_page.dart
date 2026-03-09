@@ -67,6 +67,199 @@ class _PatientReviewPageState extends State<PatientReviewPage> {
     }
   }
 
+  Future<void> _updateCaregiverMetrics(int caregiverId) async {
+    try {
+      // Get all reviews for this caregiver (including new fields)
+      final reviews = await supabase
+          .from('reviews')
+          .select('rating, on_time_rating, response_time_rating')
+          .eq('caregiver_id', caregiverId);
+
+      double avgRating = 0;
+      double avgOnTime = 0;
+      double avgResponse = 0;
+      int onTimeCount = 0;
+      int responseCount = 0;
+
+      if (reviews.isNotEmpty) {
+        double sumRating = 0;
+        double sumOnTime = 0;
+        double sumResponse = 0;
+
+        for (var r in reviews) {
+          sumRating += (r['rating'] as num).toDouble();
+
+          if (r['on_time_rating'] != null) {
+            sumOnTime += (r['on_time_rating'] as num).toDouble();
+            onTimeCount++;
+          }
+          if (r['response_time_rating'] != null) {
+            sumResponse += (r['response_time_rating'] as num).toDouble();
+            responseCount++;
+          }
+        }
+
+        avgRating =
+            double.parse((sumRating / reviews.length).toStringAsFixed(1));
+
+        if (onTimeCount > 0) {
+          avgOnTime = sumOnTime / onTimeCount;
+        }
+        if (responseCount > 0) {
+          avgResponse = sumResponse / responseCount;
+        }
+      }
+
+      // Convert on-time rating (1-5) to percentage
+      double onTimePercent = onTimeCount > 0 ? (avgOnTime / 5) * 100 : 0;
+
+      // Convert response rating (1-5) to descriptive text
+      String responseTimeText;
+      if (responseCount == 0) {
+        responseTimeText = 'N/A';
+      } else if (avgResponse >= 4.5) {
+        responseTimeText = '< 15 min';
+      } else if (avgResponse >= 3.5) {
+        responseTimeText = '< 30 min';
+      } else if (avgResponse >= 2.5) {
+        responseTimeText = '< 1 hour';
+      } else if (avgResponse >= 1.5) {
+        responseTimeText = '< 2 hours';
+      } else {
+        responseTimeText = '> 2 hours';
+      }
+
+      // Get booking stats
+      final allBookings = await supabase
+          .from('bookings')
+          .select('status')
+          .eq('caregiver_id', caregiverId);
+
+      int total = allBookings.length;
+      int completed = 0;
+      for (var b in allBookings) {
+        if (b['status'] == 'Completed') completed++;
+      }
+
+      double completionRate = total > 0 ? (completed / total) * 100 : 0;
+
+      // Update caregiver profile with all calculated metrics
+      await supabase.from('caregiver_profiles').update({
+        'rating': avgRating,
+        'satisfaction_rating': avgRating,
+        'on_time_rate':
+            double.parse(onTimePercent.toStringAsFixed(1)),
+        'completion_rate':
+            double.parse(completionRate.toStringAsFixed(1)),
+        'response_time': responseTimeText,
+        'total_patients': completed,
+      }).eq('id', caregiverId);
+    } catch (_) {}
+  }
+
+  Future<void> submitReview() async {
+    if (rating == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Please select an overall rating"),
+            backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    if (onTimeRating == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Please rate the caregiver's punctuality"),
+            backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    if (responseRating == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Please rate the caregiver's response time"),
+            backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    if (commentController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Please write a comment"),
+            backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    if (_bookingData == null) return;
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final caregiverId = _bookingData!['caregiver_id'];
+      final patientId = _bookingData!['patient_id'];
+
+      // Insert review with all rating fields
+      await supabase.from('reviews').insert({
+        'booking_id': _bookingId,
+        'patient_id': patientId,
+        'caregiver_id': caregiverId,
+        'rating': rating,
+        'on_time_rating': onTimeRating,
+        'response_time_rating': responseRating,
+        'comment': commentController.text.trim(),
+      });
+
+      // Recalculate caregiver metrics from all their reviews & bookings
+      await _updateCaregiverMetrics(caregiverId);
+
+      // Send notification to caregiver about the new review
+      final caregiver = await supabase
+          .from('caregiver_profiles')
+          .select('auth_id')
+          .eq('id', caregiverId)
+          .single();
+
+      final now = DateTime.now();
+      await supabase.from('notifications').insert({
+        'user_auth_id': caregiver['auth_id'],
+        'title': 'New Review Received',
+        'description':
+            'You received a $rating-star review: "${commentController.text.trim()}"',
+        'type': 'review',
+        'related_booking': _bookingId,
+        'date':
+            '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+        'time':
+            '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:00',
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text("Review submitted successfully!"),
+              backgroundColor: Colors.green),
+        );
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Error submitting review: $e"),
+              backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
   Widget _buildStarRow(String label, int currentRating, ValueChanged<int> onChanged, {IconData icon = Icons.star, Color color = Colors.amber}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,6 +409,7 @@ class _PatientReviewPageState extends State<PatientReviewPage> {
                           ),
                         ),
                       ),
+
                       const SizedBox(height: 28),
 
                       // ── Overall Rating ──
@@ -291,7 +485,7 @@ class _PatientReviewPageState extends State<PatientReviewPage> {
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: _isSubmitting ? null : null,
+                          onPressed: _isSubmitting ? null : submitReview,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primary,
                             shape: RoundedRectangleBorder(
