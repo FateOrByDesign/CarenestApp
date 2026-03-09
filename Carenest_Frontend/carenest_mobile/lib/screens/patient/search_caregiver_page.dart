@@ -220,13 +220,6 @@ class _CaregiverSearchPageState extends State<CaregiverSearchPage> {
     );
   }
 
-  int get _activeFilterCount {
-    int count = 0;
-    if (_selectedFilterLocation != null) count++;
-    if (_selectedFilterGender != null) count++;
-    return count;
-  }
-
   Widget buildCaregiverCard(Map<String, dynamic> caregiver) {
     bool isExpanded = expandedName == caregiver['name'];
 
@@ -433,8 +426,17 @@ class _CaregiverSearchPageState extends State<CaregiverSearchPage> {
     );
   }
 
+  int get _activeFilterCount {
+    int count = 0;
+    if (_selectedFilterLocation != null) count++;
+    if (_selectedFilterGender != null) count++;
+    return count;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final list = filteredCaregivers;
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -447,7 +449,123 @@ class _CaregiverSearchPageState extends State<CaregiverSearchPage> {
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: AppTheme.primary))
-          : const Center(child: Text('Search page')),
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  buildSearchBar(),
+                  const SizedBox(height: 12),
+
+                  // Filters row
+                  Row(
+                    children: [
+                      Expanded(child: buildLocationFilter()),
+                      const SizedBox(width: 10),
+                      Expanded(child: buildGenderFilter()),
+                    ],
+                  ),
+
+                  if (_patientLocation != null &&
+                      _selectedFilterLocation == _patientLocation)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline,
+                              size: 14, color: AppTheme.primary),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              'Showing caregivers in your area ($_patientLocation)',
+                              style: AppTheme.bodyText.copyWith(
+                                  fontSize: 12, color: AppTheme.primary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  if (_activeFilterCount > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Row(
+                        children: [
+                          Text(
+                            '${list.length} caregiver${list.length == 1 ? '' : 's'} found',
+                            style: AppTheme.bodyText.copyWith(
+                                fontSize: 12,
+                                color: AppTheme.textGrey),
+                          ),
+                          const Spacer(),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedFilterLocation = null;
+                                _selectedFilterGender = null;
+                              });
+                            },
+                            child: Text(
+                              'Clear filters',
+                              style: AppTheme.bodyText.copyWith(
+                                  fontSize: 12,
+                                  color: AppTheme.primary,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: list.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.search_off,
+                                    size: 48,
+                                    color: Colors.grey[400]),
+                                const SizedBox(height: 12),
+                                Text(
+                                  _activeFilterCount > 0
+                                      ? 'No caregivers match your filters'
+                                      : searchText.isEmpty
+                                          ? 'No caregivers available'
+                                          : 'No results for "$searchText"',
+                                  style: AppTheme.bodyText,
+                                  textAlign: TextAlign.center,
+                                ),
+                                if (_activeFilterCount > 0) ...[
+                                  const SizedBox(height: 12),
+                                  TextButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _selectedFilterLocation = null;
+                                        _selectedFilterGender = null;
+                                      });
+                                    },
+                                    child:
+                                        const Text('Clear all filters'),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: _loadData,
+                            color: AppTheme.primary,
+                            child: ListView.builder(
+                              itemCount: list.length,
+                              itemBuilder: (context, index) {
+                                return buildCaregiverCard(list[index]);
+                              },
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+            ),
       bottomNavigationBar:
           const CareReceiverNavigationBarMobile(currentIndex: 1),
     );
