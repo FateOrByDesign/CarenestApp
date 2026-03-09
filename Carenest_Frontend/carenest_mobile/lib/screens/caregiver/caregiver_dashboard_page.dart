@@ -44,6 +44,7 @@ class CaregiverDashboardPage extends StatelessWidget {
                 ),
               ],
             ),
+
             const SizedBox(height: 18),
 
             Row(
@@ -71,6 +72,31 @@ class CaregiverDashboardPage extends StatelessWidget {
             const _NextVisitCard(),
 
             const SizedBox(height: 18),
+
+            const Text(
+              'History',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: _textDark,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            const _JobCard(
+              tag: 'HOSPITAL VISIT - COMPLETED',
+              price: "Sahan Fernando",
+              time: '23/01/2026',
+            ),
+
+            const SizedBox(height: 12),
+
+            const _JobCard(
+              tag: 'HOME VISIT - COMPLETED',
+              price: "Sathika Perera",
+              time: '05/02/2026',
+            ),
           ],
         ),
       ),
@@ -281,3 +307,100 @@ class _NextVisitCard extends StatelessWidget {
     );
   }
 }
+
+class _JobCard extends StatelessWidget {
+  final String tag;
+  final String price;
+  final String time;
+
+  static const _cardBorder = Color(0xFFE7EEF0);
+  static const _textDark = Color(0xFF0F172A);
+  static const _textSoft = Color(0xFF7A8A96);
+
+  const _JobCard({required this.tag, required this.price, required this.time});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: _cardBorder),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEAF3FF),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: const Color(0xFFD5E6FF)),
+            ),
+            child: Text(
+              tag,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF2A6BCB),
+                letterSpacing: 0.4,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            price,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: _textDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.schedule, size: 18, color: _textSoft),
+              const SizedBox(width: 6),
+              Text(
+                time,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _textSoft,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            height: 42,
+            child: OutlinedButton(
+              onPressed: () {},
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _textSoft,
+                side: BorderSide(color: _cardBorder.withOpacity(1)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'View details',
+                style: TextStyle(fontWeight: FontWeight.w900),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+//this page should come first after logging
