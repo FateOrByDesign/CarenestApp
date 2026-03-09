@@ -67,6 +67,30 @@ class _PatientReviewPageState extends State<PatientReviewPage> {
     }
   }
 
+  Widget detailRow(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              title,
+              style: AppTheme.bodyText.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textDark,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(value, style: AppTheme.bodyText),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,7 +110,47 @@ class _PatientReviewPageState extends State<PatientReviewPage> {
               child: CircularProgressIndicator(color: AppTheme.primary))
           : _bookingData == null
               ? const Center(child: Text("Booking details not found."))
-              : const Center(child: Text("Review page")),
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── Session Details ──
+                      Text("Session Details", style: AppTheme.headingMedium),
+                      const SizedBox(height: 12),
+                      Card(
+                        color: AppTheme.surface,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(
+                              color: Colors.grey.withOpacity(0.2)),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              detailRow("Date",
+                                  _bookingData!['date'] ?? "N/A"),
+                              detailRow("Time",
+                                  "${_bookingData!['start_time']} - ${_bookingData!['end_time'] ?? 'Ongoing'}"),
+                              detailRow(
+                                  "Caregiver",
+                                  _bookingData!['caregiver_profiles']
+                                          ?['name'] ??
+                                      "Unknown"),
+                              detailRow("Service",
+                                  _bookingData!['service_type'] ?? "N/A"),
+                              detailRow("Location",
+                                  _bookingData!['location'] ?? "N/A"),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
     );
   }
 }
