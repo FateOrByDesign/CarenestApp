@@ -179,3 +179,117 @@ CREATE TABLE IF NOT EXISTS caregiver_documents (
     verified BOOLEAN DEFAULT false,
     uploaded_at TIMESTAMPTZ DEFAULT now()
 );
+
+
+-- ============================================
+-- 11. Patient Allergies
+-- ============================================
+CREATE TABLE IF NOT EXISTS patient_allergies (
+    id SERIAL PRIMARY KEY,
+    patient_id INTEGER REFERENCES patient_profiles(id) ON DELETE CASCADE,
+    name TEXT NOT NULL
+);
+
+
+-- ============================================
+-- 12. Patient Medical Conditions
+-- ============================================
+CREATE TABLE IF NOT EXISTS patient_medical_conditions (
+    id SERIAL PRIMARY KEY,
+    patient_id INTEGER REFERENCES patient_profiles(id) ON DELETE CASCADE,
+    name TEXT NOT NULL
+);
+
+
+-- ============================================
+-- 13. Patient Medications
+-- ============================================
+CREATE TABLE IF NOT EXISTS patient_medications (
+    id SERIAL PRIMARY KEY,
+    patient_id INTEGER REFERENCES patient_profiles(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    dosage TEXT,
+    frequency TEXT,
+    status TEXT DEFAULT 'Active'
+);
+
+
+-- ============================================
+-- 14. Patient Emergency Contacts
+-- ============================================
+CREATE TABLE IF NOT EXISTS patient_emergency_contacts (
+    id SERIAL PRIMARY KEY,
+    patient_id INTEGER REFERENCES patient_profiles(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    relationship TEXT
+);
+
+
+-- ============================================
+-- 15. Patient Insurance
+-- ============================================
+CREATE TABLE IF NOT EXISTS patient_insurance (
+    id SERIAL PRIMARY KEY,
+    patient_id INTEGER REFERENCES patient_profiles(id) ON DELETE CASCADE,
+    provider TEXT NOT NULL,
+    policy_number TEXT,
+    valid_until DATE
+);
+
+
+-- ============================================
+-- 16. Patient Documents
+-- ============================================
+CREATE TABLE IF NOT EXISTS patient_documents (
+    id SERIAL PRIMARY KEY,
+    patient_id INTEGER REFERENCES patient_profiles(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    type TEXT,
+    document_url TEXT,
+    date DATE,
+    uploaded_at TIMESTAMPTZ DEFAULT now()
+);
+
+
+-- ============================================
+-- 17. Reviews
+-- ============================================
+CREATE TABLE IF NOT EXISTS reviews (
+    id SERIAL PRIMARY KEY,
+    booking_id TEXT REFERENCES bookings(id),
+    patient_id INTEGER REFERENCES patient_profiles(id),
+    caregiver_id INTEGER REFERENCES caregiver_profiles(id),
+    rating DECIMAL(2,1) NOT NULL,
+    comment TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+
+-- ============================================
+-- 18. Notifications
+-- ============================================
+CREATE TABLE IF NOT EXISTS notifications (
+    id SERIAL PRIMARY KEY,
+    user_auth_id UUID REFERENCES auth.users(id),
+    title TEXT NOT NULL,
+    description TEXT,
+    type TEXT,
+    related_booking TEXT REFERENCES bookings(id),
+    date DATE,
+    time TIME,
+    is_read BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+
+-- ============================================
+-- VIEW: All Users (for Admin Portal)
+-- Combines caregivers + patients into one view
+-- ============================================
+CREATE OR REPLACE VIEW all_users AS
+SELECT id, name, email, phone, 'Caregiver' AS role, status, location, nic, rating, created_at
+FROM caregiver_profiles
+UNION ALL
+SELECT id, name, email, phone, 'Family' AS role, status, location, NULL AS nic, NULL AS rating, created_at
+FROM patient_profiles;
