@@ -21,6 +21,60 @@ class _RequestCarePageState extends State<RequestCarePage> {
 
   final List<String> serviceTypes = ['Home care', 'Hospital Care'];
 
+  //Date picker
+  Future<void> pickDate() async {
+    DateTime? date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2030),
+    );
+    if (date != null) {
+      setState(() => selectedDate = date);
+    }
+  }
+
+  //Start time picker
+  Future<void> pickStartTime() async {
+    TimeOfDay? time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (time != null) {
+      setState(() => startTime = time);
+    }
+  }
+
+  //End time picker
+  Future<void> pickEndTime() async {
+    TimeOfDay? time = await showTimePicker(
+      context: context,
+      initialTime: startTime ?? TimeOfDay.now(),
+    );
+    if (time != null) {
+      setState(() => endTime = time);
+    }
+  }
+
+  //Toggle button used for Date and Time selection
+  Widget buildDateTimeField({
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+    IconData? icon,
+  }) {
+    return TextFormField(
+      readOnly: true, // prevents keyboard from showing
+      onTap: onTap, // open picker
+      style: AppTheme.bodyText.copyWith(color: AppTheme.textDark),
+      decoration: InputDecoration(
+        hintText: value.isEmpty ? 'Select' : value, //New adding
+        suffixIcon: icon != null ? Icon(icon, color: AppTheme.primary) : null,
+      ),
+      controller: TextEditingController(text: value),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
