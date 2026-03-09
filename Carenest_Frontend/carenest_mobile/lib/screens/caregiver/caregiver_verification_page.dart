@@ -139,6 +139,160 @@ class _CaregiverVerificationPageState
     } catch (_) {}
   }
 
+  Future<void> _pickFile(String documentType) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+      withData: true,
+    );
+
+    if (result != null && result.files.single.bytes != null) {
+      final file = result.files.single;
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('File must be under 5MB'),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        }
+        return;
+      }
+
+      setState(() {
+        switch (documentType) {
+          case 'nic_front':
+            _nicFrontFile = file;
+            break;
+          case 'nic_back':
+            _nicBackFile = file;
+            break;
+          case 'police_report':
+            _policeReportFile = file;
+            break;
+        }
+      });
+    }
+  }
+
+  Future<String> _uploadFile(
+      PlatformFile file, String docType, int caregiverId) async {
+    final fileExt = file.extension ?? 'jpg';
+    final filePath =
+        'caregiver_$caregiverId/${docType}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+
+    await supabase.storage.from('documents').uploadBinary(
+      filePath,
+      file.bytes!,
+      fileOptions: const FileOptions(upsert: true),
+    );
+
+    final publicUrl =
+        supabase.storage.from('documents').getPublicUrl(filePath);
+
+    return publicUrl;
+  }
+
+  Future<void> _submitDocuments() async {
+    if (_nicFrontFile == null ||
+        _nicBackFile == null ||
+        _policeReportFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please upload all 3 documents'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isUploading = true;
+      _currentState = VerificationState.submitting;
+    });
+
+    try {
+      final caregiverId = widget.caregiverId;
+
+      // Upload files to Supabase Storage
+      final nicFrontUrl =
+          await _uploadFile(_nicFrontFile!, 'nic_front', caregiverId);
+      final nicBackUrl =
+          await _uploadFile(_nicBackFile!, 'nic_back', caregiverId);
+      final policeReportUrl =
+          await _uploadFile(_policeReportFile!, 'police_report', caregiverId);
+
+      // Get caregiver profile data
+      final profile = await supabase
+          .from('caregiver_profiles')
+          .select('name, email, phone, nic')
+          .eq('id', caregiverId)
+          .single();
+
+      // Delete any previous rejected application for this caregiver
+      await supabase
+          .from('caregiver_applications')
+          .delete()
+          .eq('caregiver_id', caregiverId);
+
+      // Insert new application
+      await supabase.from('caregiver_applications').insert({
+        'caregiver_id': caregiverId,
+        'name': profile['name'],
+        'email': profile['email'],
+        'phone': profile['phone'],
+        'nic': profile['nic'],
+        'submitted_date': DateTime.now().toIso8601String().split('T')[0],
+        'status': 'Pending',
+        'doc_nic_front': nicFrontUrl,
+        'doc_nic_back': nicBackUrl,
+        'doc_certificate': policeReportUrl,
+      });
+
+      // Also insert into caregiver_documents
+      await supabase.from('caregiver_documents').insert([
+        {
+          'caregiver_id': caregiverId,
+          'type': 'nic_front',
+          'document_url': nicFrontUrl
+        },
+        {
+          'caregiver_id': caregiverId,
+          'type': 'nic_back',
+          'document_url': nicBackUrl
+        },
+        {
+          'caregiver_id': caregiverId,
+          'type': 'police_report',
+          'document_url': policeReportUrl
+        },
+      ]);
+
+      if (mounted) {
+        setState(() {
+          _currentState = VerificationState.pending;
+          _isUploading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _currentState = VerificationState.upload;
+          _isUploading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Upload failed: $e'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _handleLogout() async {
     await supabase.auth.signOut();
     if (mounted) {
