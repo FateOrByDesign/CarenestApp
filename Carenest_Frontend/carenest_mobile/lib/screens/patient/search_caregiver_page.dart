@@ -150,6 +150,76 @@ class _CaregiverSearchPageState extends State<CaregiverSearchPage> {
     );
   }
 
+  Widget buildLocationFilter() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedFilterLocation,
+          isExpanded: true,
+          hint: const Text('All Locations'),
+          icon: const Icon(Icons.location_on, color: AppTheme.primary),
+          items: [
+            const DropdownMenuItem<String>(
+              value: '',
+              child: Text('All Locations'),
+            ),
+            ...SriLankanLocations.districts.map((loc) => DropdownMenuItem(
+                  value: loc,
+                  child: Text(loc),
+                )),
+          ],
+          onChanged: (val) {
+            setState(() {
+              _selectedFilterLocation =
+                  (val == null || val.isEmpty) ? null : val;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget buildGenderFilter() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedFilterGender,
+          isExpanded: true,
+          hint: const Text('All Genders'),
+          icon: const Icon(Icons.wc, color: AppTheme.primary),
+          items: [
+            const DropdownMenuItem<String>(
+              value: '',
+              child: Text('All Genders'),
+            ),
+            ..._genderOptions.map((g) => DropdownMenuItem(
+                  value: g,
+                  child: Text(g),
+                )),
+          ],
+          onChanged: (val) {
+            setState(() {
+              _selectedFilterGender =
+                  (val == null || val.isEmpty) ? null : val;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
   int get _activeFilterCount {
     int count = 0;
     if (_selectedFilterLocation != null) count++;
