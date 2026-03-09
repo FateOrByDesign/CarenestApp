@@ -24,9 +24,47 @@ class _PatientReviewPageState extends State<PatientReviewPage> {
   Map<String, dynamic>? _bookingData;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args != null && _bookingId == null) {
+      _bookingId = args.toString();
+      _fetchBookingDetails();
+    } else if (args == null && _isLoading) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   void dispose() {
     commentController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchBookingDetails() async {
+    try {
+      final data = await supabase
+          .from('bookings')
+          .select('*, caregiver_profiles(name), patient_profiles(name)')
+          .eq('id', _bookingId!)
+          .single();
+
+      if (mounted) {
+        setState(() {
+          _bookingData = data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Failed to load session details: $e"),
+              backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   @override
