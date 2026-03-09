@@ -30,7 +30,65 @@ class _CaregiverSearchPageState extends State<CaregiverSearchPage> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = false);
+    try {
+      final uid = supabase.auth.currentUser!.id;
+
+      // Load patient's location
+      final patient = await supabase
+          .from('patient_profiles')
+          .select('location')
+          .eq('auth_id', uid)
+          .single();
+
+      final patientLocation = patient['location'] as String?;
+
+      // Load all active caregivers (include gender in the select)
+      final data = await supabase
+          .from('caregiver_profiles')
+          .select(
+              'id, name, email, phone, gender, experience_years, total_patients, profile_image_url, service_area, verified, hourly_rate, reviews(rating)')
+          .eq('status', 'Active');
+
+      List<Map<String, dynamic>> processedCaregivers = [];
+
+      for (var doc in data) {
+        final caregiver = Map<String, dynamic>.from(doc);
+        final reviews = caregiver['reviews'] as List<dynamic>? ?? [];
+
+        double avgRating = 0.0;
+        if (reviews.isNotEmpty) {
+          double sum = 0;
+          for (var r in reviews) {
+            sum += (r['rating'] as num).toDouble();
+          }
+          avgRating = sum / reviews.length;
+        }
+
+        caregiver['calculated_rating'] = avgRating;
+        caregiver['review_count'] = reviews.length;
+
+        processedCaregivers.add(caregiver);
+      }
+
+      processedCaregivers.sort((a, b) => (b['calculated_rating'] as double)
+          .compareTo(a['calculated_rating'] as double));
+
+      if (mounted) {
+        setState(() {
+          _caregivers = processedCaregivers;
+          _patientLocation = patientLocation;
+          _selectedFilterLocation = patientLocation;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _caregivers = [];
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
