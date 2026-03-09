@@ -67,6 +67,75 @@ class _PatientReviewPageState extends State<PatientReviewPage> {
     }
   }
 
+  Widget _buildStarRow(String label, int currentRating, ValueChanged<int> onChanged, {IconData icon = Icons.star, Color color = Colors.amber}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 6),
+            Text(label, style: AppTheme.headingMedium.copyWith(fontSize: 15)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(5, (index) {
+            final starIndex = index + 1;
+            return IconButton(
+              onPressed: () => onChanged(starIndex),
+              icon: Icon(
+                starIndex <= currentRating ? Icons.star : Icons.star_border,
+                color: color,
+                size: 36,
+              ),
+            );
+          }),
+        ),
+        if (currentRating > 0)
+          Center(
+            child: Text(
+              _getRatingLabel(label, currentRating),
+              style: AppTheme.bodyText.copyWith(
+                fontSize: 12,
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _getRatingLabel(String category, int value) {
+    if (category.contains('Overall')) {
+      const labels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+      return labels[value];
+    } else if (category.contains('Punctuality')) {
+      const labels = [
+        '',
+        'Very Late',
+        'Late',
+        'On Time',
+        'Early',
+        'Always On Time'
+      ];
+      return labels[value];
+    } else if (category.contains('Response')) {
+      const labels = [
+        '',
+        '> 2 hours',
+        '< 2 hours',
+        '< 1 hour',
+        '< 30 min',
+        '< 15 min'
+      ];
+      return labels[value];
+    }
+    return '';
+  }
+
   Widget detailRow(String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -147,6 +216,43 @@ class _PatientReviewPageState extends State<PatientReviewPage> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 28),
+
+                      // ── Overall Rating ──
+                      _buildStarRow(
+                        'Overall Rating',
+                        rating,
+                        (val) => setState(() => rating = val),
+                        icon: Icons.star,
+                        color: Colors.amber,
+                      ),
+
+                      const SizedBox(height: 20),
+                      Divider(color: Colors.grey[200]),
+                      const SizedBox(height: 16),
+
+                      // ── Punctuality / On-Time Rating ──
+                      _buildStarRow(
+                        'Punctuality (On-Time)',
+                        onTimeRating,
+                        (val) => setState(() => onTimeRating = val),
+                        icon: Icons.schedule,
+                        color: Colors.green,
+                      ),
+
+                      const SizedBox(height: 20),
+                      Divider(color: Colors.grey[200]),
+                      const SizedBox(height: 16),
+
+                      // ── Response Time Rating ──
+                      _buildStarRow(
+                        'Response Time',
+                        responseRating,
+                        (val) => setState(() => responseRating = val),
+                        icon: Icons.flash_on,
+                        color: Colors.blue,
+                      ),
+
                       const SizedBox(height: 20),
                     ],
                   ),
