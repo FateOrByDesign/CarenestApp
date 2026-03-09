@@ -253,6 +253,64 @@ class _PatientReviewPageState extends State<PatientReviewPage> {
                         color: Colors.blue,
                       ),
 
+                      const SizedBox(height: 28),
+
+                      // ── Comment ──
+                      Text("Write a Review", style: AppTheme.headingMedium),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: commentController,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          hintText:
+                              "Describe the caregiver's service...",
+                          filled: true,
+                          fillColor: AppTheme.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                                color: Colors.grey.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                                color: Colors.grey.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                const BorderSide(color: AppTheme.primary),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      // ── Submit Button ──
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: _isSubmitting ? null : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: _isSubmitting
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2))
+                              : const Text("Submit Review",
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold)),
+                        ),
+                      ),
                       const SizedBox(height: 20),
                     ],
                   ),
