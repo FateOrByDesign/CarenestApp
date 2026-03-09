@@ -91,6 +91,72 @@ class _CaregiverSearchPageState extends State<CaregiverSearchPage> {
     }
   }
 
+  List<Map<String, dynamic>> get filteredCaregivers {
+    var list = _caregivers;
+
+    // Filter by selected location
+    if (_selectedFilterLocation != null &&
+        _selectedFilterLocation!.isNotEmpty) {
+      list = list
+          .where((c) =>
+              (c['service_area'] ?? '')
+                  .toString()
+                  .toLowerCase() ==
+              _selectedFilterLocation!.toLowerCase())
+          .toList();
+    }
+
+    // Filter by gender
+    if (_selectedFilterGender != null &&
+        _selectedFilterGender!.isNotEmpty) {
+      list = list
+          .where((c) =>
+              (c['gender'] ?? '')
+                  .toString()
+                  .toLowerCase() ==
+              _selectedFilterGender!.toLowerCase())
+          .toList();
+    }
+
+    // Then filter by search text
+    if (searchText.isNotEmpty) {
+      list = list
+          .where((c) =>
+              (c['name'] ?? '')
+                  .toString()
+                  .toLowerCase()
+                  .contains(searchText.toLowerCase()) ||
+              (c['service_area'] ?? '')
+                  .toString()
+                  .toLowerCase()
+                  .contains(searchText.toLowerCase()))
+          .toList();
+    }
+
+    return list;
+  }
+
+  Widget buildSearchBar() {
+    return TextField(
+      decoration: const InputDecoration(
+        hintText: 'Search caregiver...',
+        prefixIcon: Icon(Icons.search, color: AppTheme.primary),
+      ),
+      onChanged: (value) {
+        setState(() {
+          searchText = value;
+        });
+      },
+    );
+  }
+
+  int get _activeFilterCount {
+    int count = 0;
+    if (_selectedFilterLocation != null) count++;
+    if (_selectedFilterGender != null) count++;
+    return count;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
