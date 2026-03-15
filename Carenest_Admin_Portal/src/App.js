@@ -5,18 +5,19 @@ import Dashboard from "./pages/Dashboard";
 import CaregiverVerification from "./pages/CaregiverVerification";
 import Users from "./pages/Users";
 import Bookings from "./pages/Bookings";
-import Register from "./pages/Register";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/caregivers" element={<CaregiverVerification />} />
-        <Route path="/users" element={<Users />} />
-        <Route path="/bookings" element={<Bookings />} />
-        <Route path="/register" element={<Register />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/caregivers" element={<CaregiverVerification />} />
+          <Route path="/users" element={<Users />} />
+          <Route path="/bookings" element={<Bookings />} />
+        </Route>
       </Routes>
     </Router>
   );

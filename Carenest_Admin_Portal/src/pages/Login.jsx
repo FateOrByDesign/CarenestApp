@@ -373,21 +373,6 @@ function Login() {
             </Button>
           </Box>
 
-          <Box sx={{ textAlign: "center", mt: 3 }}>
-            <Link
-              href="/register"
-              underline="none"
-              sx={{
-                fontSize: "1.025rem",
-                color: "#1565c0",
-                fontWeight: 500,
-                "&:hover": { textDecoration: "underline" },
-              }}
-            >
-              Create an account
-            </Link>
-          </Box>
-
           <Typography
             sx={{
               textAlign: "center",

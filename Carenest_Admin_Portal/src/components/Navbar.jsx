@@ -4,6 +4,7 @@ import {
   Avatar,
   Badge,
   Box,
+  CircularProgress,
   Divider,
   IconButton,
   ListItemIcon,
@@ -14,10 +15,10 @@ import {
 } from "@mui/material";
 import {
   NotificationsNoneOutlined,
-  PersonOutline,
-  SettingsOutlined,
   LogoutOutlined,
 } from "@mui/icons-material";
+import CareNestLogo from "../assets/carenest_logo.png";
+import API_BASE, { getAuthHeaders } from "../services/api";
 
 const navItems = [
   { label: "Dashboard", path: "/dashboard" },
@@ -26,20 +27,60 @@ const navItems = [
   { label: "Bookings", path: "/bookings" },
 ];
 
-const notifications = [
-  { title: "New caregiver application received", time: "2h ago" },
-  { title: "Booking BK-1024 confirmed by caregiver", time: "3h ago" },
-];
+function formatTimeAgo(timestamp) {
+  const now = new Date();
+  const date = new Date(timestamp);
+  const seconds = Math.floor((now - date) / 1000);
+
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString();
+}
 
 function Navbar() {
   const navigate = useNavigate();
   const [notifAnchor, setNotifAnchor] = useState(null);
   const [accountAnchor, setAccountAnchor] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+
+  const handleNotifOpen = async (e) => {
+    setNotifAnchor(e.currentTarget);
+    const clearedAt = localStorage.getItem("notifClearedAt");
+    if (clearedAt) return;
+    setNotifLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/notifications/activity?limit=10`, {
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifications(data.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch notifications:", err);
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
+  const handleClearNotifications = () => {
+    setNotifications([]);
+    localStorage.setItem("notifClearedAt", new Date().toISOString());
+    setNotifAnchor(null);
+  };
 
   const handleLogout = () => {
     setAccountAnchor(null);
     localStorage.removeItem("token");
     localStorage.removeItem("role");
+    localStorage.removeItem("adminName");
+    localStorage.removeItem("notifClearedAt");
     navigate("/");
   };
 
@@ -109,9 +150,13 @@ function Navbar() {
           {/* Notification Bell */}
           <IconButton
             sx={{ color: "#555" }}
-            onClick={(e) => setNotifAnchor(e.currentTarget)}
+            onClick={handleNotifOpen}
           >
-            <Badge variant="dot" color="error">
+            <Badge
+              variant="dot"
+              color="error"
+              invisible={notifications.length === 0}
+            >
               <NotificationsNoneOutlined sx={{ fontSize: 26 }} />
             </Badge>
           </IconButton>
@@ -124,7 +169,7 @@ function Navbar() {
             slotProps={{
               paper: {
                 sx: {
-                  width: 320,
+                  width: 340,
                   borderRadius: "14px",
                   boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
                   mt: 1,
@@ -132,32 +177,59 @@ function Navbar() {
               },
             }}
           >
-            <Box sx={{ px: 2.5, py: 1.5 }}>
+            <Box sx={{ px: 2.5, py: 1.5, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <Typography sx={{ fontSize: "0.95rem", fontWeight: 700, color: "#1a1a2e" }}>
                 Notifications
               </Typography>
+              {notifications.length > 0 && (
+                <Typography
+                  onClick={handleClearNotifications}
+                  sx={{
+                    fontSize: "0.75rem",
+                    color: "#1565c0",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    "&:hover": { textDecoration: "underline" },
+                  }}
+                >
+                  Clear all
+                </Typography>
+              )}
             </Box>
             <Divider />
-            {notifications.map((n, i) => (
-              <MenuItem
-                key={i}
-                onClick={() => setNotifAnchor(null)}
-                sx={{
-                  py: 1.5,
-                  px: 2.5,
-                  "&:hover": { bgcolor: "#f5f7fa" },
-                }}
-              >
-                <Box>
-                  <Typography sx={{ fontSize: "0.83rem", color: "#333", lineHeight: 1.4 }}>
-                    {n.title}
-                  </Typography>
-                  <Typography sx={{ fontSize: "0.72rem", color: "#999", mt: 0.3 }}>
-                    {n.time}
-                  </Typography>
-                </Box>
+            {notifLoading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+                <CircularProgress size={22} />
+              </Box>
+            ) : notifications.length === 0 ? (
+              <MenuItem disabled sx={{ py: 2, px: 2.5 }}>
+                <Typography sx={{ fontSize: "0.83rem", color: "#999" }}>
+                  No recent activity
+                </Typography>
               </MenuItem>
-            ))}
+            ) : (
+              notifications.map((n) => (
+                <MenuItem
+                  key={n.id}
+                  onClick={() => setNotifAnchor(null)}
+                  sx={{
+                    py: 1.5,
+                    px: 2.5,
+                    whiteSpace: "normal",
+                    "&:hover": { bgcolor: "#f5f7fa" },
+                  }}
+                >
+                  <Box>
+                    <Typography sx={{ fontSize: "0.83rem", color: "#333", lineHeight: 1.4 }}>
+                      {n.title}
+                    </Typography>
+                    <Typography sx={{ fontSize: "0.72rem", color: "#999", mt: 0.3 }}>
+                      {formatTimeAgo(n.timestamp)}
+                    </Typography>
+                  </Box>
+                </MenuItem>
+              ))
+            )}
             <Divider />
             <MenuItem
               onClick={() => {
@@ -177,13 +249,14 @@ function Navbar() {
 
           {/* Account Avatar */}
           <Avatar
-            src="https://i.pravatar.cc/40?img=12"
+            src={CareNestLogo}
             onClick={(e) => setAccountAnchor(e.currentTarget)}
             sx={{
               width: 42,
               height: 42,
               border: "2px solid #e0e0e0",
               cursor: "pointer",
+              bgcolor: "#1565c0",
             }}
           />
           <Menu
@@ -203,37 +276,6 @@ function Navbar() {
               },
             }}
           >
-            <MenuItem
-              onClick={() => {
-                setAccountAnchor(null);
-                navigate("/dashboard");
-              }}
-              sx={{ py: 1.2, px: 2.5 }}
-            >
-              <ListItemIcon>
-                <PersonOutline sx={{ fontSize: 20, color: "#555" }} />
-              </ListItemIcon>
-              <ListItemText
-                primary="My Account"
-                primaryTypographyProps={{ fontSize: "0.85rem" }}
-              />
-            </MenuItem>
-            <MenuItem
-              onClick={() => {
-                setAccountAnchor(null);
-                navigate("/dashboard");
-              }}
-              sx={{ py: 1.2, px: 2.5 }}
-            >
-              <ListItemIcon>
-                <SettingsOutlined sx={{ fontSize: 20, color: "#555" }} />
-              </ListItemIcon>
-              <ListItemText
-                primary="Settings"
-                primaryTypographyProps={{ fontSize: "0.85rem" }}
-              />
-            </MenuItem>
-            <Divider />
             <MenuItem
               onClick={handleLogout}
               sx={{ py: 1.2, px: 2.5 }}
