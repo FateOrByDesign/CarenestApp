@@ -7,6 +7,7 @@ const dashboardRoutes = require("./routes/dashboard");
 const caregiverRoutes = require("./routes/caregivers");
 const userRoutes = require("./routes/users");
 const bookingRoutes = require("./routes/bookings");
+const notificationRoutes = require("./routes/notifications");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
@@ -25,6 +26,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/caregivers", caregiverRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
