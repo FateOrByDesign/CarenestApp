@@ -1,11 +1,18 @@
-const Database = require("better-sqlite3");
-const path = require("path");
+const { createClient } = require("@supabase/supabase-js");
 
-const dbPath = path.join(__dirname, "..", "carenest.db");
-const db = new Database(dbPath);
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Enable WAL mode for better performance
-db.pragma("journal_mode = WAL");
-db.pragma("foreign_keys = ON");
+if (!supabaseUrl || !supabaseKey) {
+  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment variables.");
+  process.exit(1);
+}
 
-module.exports = db;
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+});
+
+module.exports = supabase;
