@@ -1,53 +1,60 @@
-const db = require("../config/db");
+const supabase = require("../config/db");
 
-exports.getApplications = (req, res, next) => {
+exports.getApplications = async (req, res, next) => {
   try {
     const { status, search } = req.query;
 
-    let sql = "SELECT * FROM caregiver_applications WHERE 1=1";
-    const params = [];
+    let query = supabase.from("caregiver_applications").select("*");
 
     if (status && status !== "All") {
-      sql += " AND status = ?";
-      params.push(status);
+      query = query.eq("status", status);
     }
 
     if (search) {
-      sql += " AND (name LIKE ? OR email LIKE ? OR nic LIKE ?)";
-      const like = `%${search}%`;
-      params.push(like, like, like);
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,nic.ilike.%${search}%`);
     }
 
-    sql += " ORDER BY submitted_date DESC";
+    query = query.order("submitted_date", { ascending: false });
 
-    const rows = db.prepare(sql).all(...params);
-    res.json({ success: true, data: rows });
+    const { data, error } = await query;
+    if (error) throw error;
+
+    res.json({ success: true, data });
   } catch (err) {
     next(err);
   }
 };
 
-exports.getApplicationById = (req, res, next) => {
+exports.getApplicationById = async (req, res, next) => {
   try {
-    const row = db.prepare("SELECT * FROM caregiver_applications WHERE id = ?").get(req.params.id);
+    const { data, error } = await supabase
+      .from("caregiver_applications")
+      .select("*")
+      .eq("id", req.params.id)
+      .single();
 
-    if (!row) {
+    if (error || !data) {
       return res.status(404).json({ success: false, message: "Application not found." });
     }
 
-    res.json({ success: true, data: row });
+    res.json({ success: true, data });
   } catch (err) {
     next(err);
   }
 };
 
-exports.approveApplication = (req, res, next) => {
+exports.approveApplication = async (req, res, next) => {
   try {
-    const result = db.prepare(
-      "UPDATE caregiver_applications SET status = 'Approved' WHERE id = ? AND status = 'Pending'"
-    ).run(req.params.id);
+    const { data, error } = await supabase
+      .from("caregiver_applications")
+      .update({ status: "Approved" })
+      .eq("id", req.params.id)
+      .eq("status", "Pending")
+      .select();
 
-    if (result.changes === 0) {
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
       return res.status(404).json({ success: false, message: "Application not found or not pending." });
     }
 
@@ -57,7 +64,7 @@ exports.approveApplication = (req, res, next) => {
   }
 };
 
-exports.rejectApplication = (req, res, next) => {
+exports.rejectApplication = async (req, res, next) => {
   try {
     const { reason } = req.body;
 
@@ -65,11 +72,16 @@ exports.rejectApplication = (req, res, next) => {
       return res.status(400).json({ success: false, message: "Rejection reason is required." });
     }
 
-    const result = db.prepare(
-      "UPDATE caregiver_applications SET status = 'Rejected', rejection_reason = ? WHERE id = ? AND status = 'Pending'"
-    ).run(reason, req.params.id);
+    const { data, error } = await supabase
+      .from("caregiver_applications")
+      .update({ status: "Rejected", rejection_reason: reason })
+      .eq("id", req.params.id)
+      .eq("status", "Pending")
+      .select();
 
-    if (result.changes === 0) {
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
       return res.status(404).json({ success: false, message: "Application not found or not pending." });
     }
 
