@@ -1,51 +1,39 @@
-const db = require("../config/db");
+const supabase = require("../config/db");
 
-exports.getBookings = (req, res, next) => {
+exports.getBookings = async (req, res, next) => {
   try {
     const { status, serviceType, search, from, to } = req.query;
 
-    let sql = `
-      SELECT b.*,
-             f.name AS family_name, f.email AS family_email, f.phone AS family_phone,
-             c.name AS caregiver_name, c.email AS caregiver_email, c.phone AS caregiver_phone
-      FROM bookings b
-      LEFT JOIN users f ON b.family_id = f.id
-      LEFT JOIN users c ON b.caregiver_id = c.id
-      WHERE 1=1
-    `;
-    const params = [];
+    let query = supabase
+      .from("bookings")
+      .select(`
+        *,
+        patient_profiles!patient_id(name, email, phone),
+        caregiver_profiles!caregiver_id(name, email, phone)
+      `);
 
     if (status && status !== "All") {
-      sql += " AND b.status = ?";
-      params.push(status);
+      query = query.eq("status", status);
     }
 
     if (serviceType && serviceType !== "All") {
-      sql += " AND b.service_type = ?";
-      params.push(serviceType);
-    }
-
-    if (search) {
-      sql += " AND (b.id LIKE ? OR f.name LIKE ? OR f.email LIKE ? OR c.name LIKE ? OR c.email LIKE ?)";
-      const like = `%${search}%`;
-      params.push(like, like, like, like, like);
+      query = query.eq("service_type", serviceType);
     }
 
     if (from) {
-      sql += " AND b.date >= ?";
-      params.push(from);
+      query = query.gte("date", from);
     }
 
     if (to) {
-      sql += " AND b.date <= ?";
-      params.push(to);
+      query = query.lte("date", to);
     }
 
-    sql += " ORDER BY b.created_at DESC";
+    query = query.order("created_at", { ascending: false });
 
-    const rows = db.prepare(sql).all(...params);
+    const { data, error } = await query;
+    if (error) throw error;
 
-    const bookings = rows.map((row) => ({
+    let bookings = (data || []).map((row) => ({
       id: row.id,
       serviceType: row.service_type,
       status: row.status,
@@ -55,9 +43,30 @@ exports.getBookings = (req, res, next) => {
       location: row.location,
       paymentStatus: row.payment_status,
       flagged: !!row.flagged,
-      family: { name: row.family_name, email: row.family_email, phone: row.family_phone },
-      caregiver: { name: row.caregiver_name, email: row.caregiver_email, phone: row.caregiver_phone },
+      family: {
+        name: row.patient_profiles?.name || null,
+        email: row.patient_profiles?.email || null,
+        phone: row.patient_profiles?.phone || null,
+      },
+      caregiver: {
+        name: row.caregiver_profiles?.name || null,
+        email: row.caregiver_profiles?.email || null,
+        phone: row.caregiver_profiles?.phone || null,
+      },
     }));
+
+    // Client-side search filter (for cross-table search)
+    if (search) {
+      const s = search.toLowerCase();
+      bookings = bookings.filter(
+        (b) =>
+          b.id.toLowerCase().includes(s) ||
+          (b.family.name && b.family.name.toLowerCase().includes(s)) ||
+          (b.family.email && b.family.email.toLowerCase().includes(s)) ||
+          (b.caregiver.name && b.caregiver.name.toLowerCase().includes(s)) ||
+          (b.caregiver.email && b.caregiver.email.toLowerCase().includes(s))
+      );
+    }
 
     res.json({ success: true, data: bookings });
   } catch (err) {
@@ -65,19 +74,19 @@ exports.getBookings = (req, res, next) => {
   }
 };
 
-exports.getBookingById = (req, res, next) => {
+exports.getBookingById = async (req, res, next) => {
   try {
-    const row = db.prepare(
-      `SELECT b.*,
-              f.name AS family_name, f.email AS family_email, f.phone AS family_phone,
-              c.name AS caregiver_name, c.email AS caregiver_email, c.phone AS caregiver_phone
-       FROM bookings b
-       LEFT JOIN users f ON b.family_id = f.id
-       LEFT JOIN users c ON b.caregiver_id = c.id
-       WHERE b.id = ?`
-    ).get(req.params.id);
+    const { data: row, error } = await supabase
+      .from("bookings")
+      .select(`
+        *,
+        patient_profiles!patient_id(name, email, phone),
+        caregiver_profiles!caregiver_id(name, email, phone)
+      `)
+      .eq("id", req.params.id)
+      .single();
 
-    if (!row) {
+    if (error || !row) {
       return res.status(404).json({ success: false, message: "Booking not found." });
     }
 
@@ -93,8 +102,16 @@ exports.getBookingById = (req, res, next) => {
         location: row.location,
         paymentStatus: row.payment_status,
         flagged: !!row.flagged,
-        family: { name: row.family_name, email: row.family_email, phone: row.family_phone },
-        caregiver: { name: row.caregiver_name, email: row.caregiver_email, phone: row.caregiver_phone },
+        family: {
+          name: row.patient_profiles?.name || null,
+          email: row.patient_profiles?.email || null,
+          phone: row.patient_profiles?.phone || null,
+        },
+        caregiver: {
+          name: row.caregiver_profiles?.name || null,
+          email: row.caregiver_profiles?.email || null,
+          phone: row.caregiver_profiles?.phone || null,
+        },
       },
     });
   } catch (err) {
@@ -102,22 +119,31 @@ exports.getBookingById = (req, res, next) => {
   }
 };
 
-exports.toggleFlag = (req, res, next) => {
+exports.toggleFlag = async (req, res, next) => {
   try {
-    const booking = db.prepare("SELECT id, flagged FROM bookings WHERE id = ?").get(req.params.id);
+    const { data: booking, error: fetchError } = await supabase
+      .from("bookings")
+      .select("id, flagged")
+      .eq("id", req.params.id)
+      .single();
 
-    if (!booking) {
+    if (fetchError || !booking) {
       return res.status(404).json({ success: false, message: "Booking not found." });
     }
 
-    const newFlagged = booking.flagged ? 0 : 1;
+    const newFlagged = !booking.flagged;
 
-    db.prepare("UPDATE bookings SET flagged = ? WHERE id = ?").run(newFlagged, req.params.id);
+    const { error: updateError } = await supabase
+      .from("bookings")
+      .update({ flagged: newFlagged })
+      .eq("id", req.params.id);
+
+    if (updateError) throw updateError;
 
     res.json({
       success: true,
       message: newFlagged ? "Booking flagged." : "Booking unflagged.",
-      data: { flagged: !!newFlagged },
+      data: { flagged: newFlagged },
     });
   } catch (err) {
     next(err);
