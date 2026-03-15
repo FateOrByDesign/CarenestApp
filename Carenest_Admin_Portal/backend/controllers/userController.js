@@ -1,62 +1,94 @@
-const db = require("../config/db");
+const supabase = require("../config/db");
 
-exports.getUsers = (req, res, next) => {
+exports.getUsers = async (req, res, next) => {
   try {
     const { role, status, search } = req.query;
 
-    let sql = "SELECT * FROM users WHERE 1=1";
-    const params = [];
+    let query = supabase.from("all_users").select("*");
 
     if (role && role !== "All") {
-      sql += " AND role = ?";
-      params.push(role);
+      query = query.eq("role", role);
     }
 
     if (status && status !== "All") {
-      sql += " AND status = ?";
-      params.push(status);
+      query = query.eq("status", status);
     }
 
     if (search) {
-      sql += " AND (name LIKE ? OR email LIKE ? OR phone LIKE ?)";
-      const like = `%${search}%`;
-      params.push(like, like, like);
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
     }
 
-    sql += " ORDER BY created_at DESC";
+    query = query.order("created_at", { ascending: false });
 
-    const rows = db.prepare(sql).all(...params);
-    res.json({ success: true, data: rows });
+    const { data, error } = await query;
+    if (error) throw error;
+
+    res.json({ success: true, data });
   } catch (err) {
     next(err);
   }
 };
 
-exports.getUserById = (req, res, next) => {
+exports.getUserById = async (req, res, next) => {
   try {
-    const row = db.prepare("SELECT * FROM users WHERE id = ?").get(req.params.id);
+    const { role } = req.query;
+    const id = req.params.id;
 
-    if (!row) {
+    let data = null;
+
+    if (role === "Caregiver") {
+      const result = await supabase.from("caregiver_profiles").select("*").eq("id", id).single();
+      if (result.data) data = { ...result.data, role: "Caregiver" };
+    } else if (role === "Family") {
+      const result = await supabase.from("patient_profiles").select("*").eq("id", id).single();
+      if (result.data) data = { ...result.data, role: "Family" };
+    } else {
+      // Try both tables
+      const cgResult = await supabase.from("caregiver_profiles").select("*").eq("id", id).single();
+      if (cgResult.data) {
+        data = { ...cgResult.data, role: "Caregiver" };
+      } else {
+        const ptResult = await supabase.from("patient_profiles").select("*").eq("id", id).single();
+        if (ptResult.data) data = { ...ptResult.data, role: "Family" };
+      }
+    }
+
+    if (!data) {
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    res.json({ success: true, data: row });
+    res.json({ success: true, data });
   } catch (err) {
     next(err);
   }
 };
 
-exports.toggleUserStatus = (req, res, next) => {
+exports.toggleUserStatus = async (req, res, next) => {
   try {
-    const user = db.prepare("SELECT id, status FROM users WHERE id = ?").get(req.params.id);
+    const id = req.params.id;
+    const { role } = req.body;
 
-    if (!user) {
+    const table = role === "Caregiver" ? "caregiver_profiles" : "patient_profiles";
+
+    // Get current status
+    const { data: user, error: fetchError } = await supabase
+      .from(table)
+      .select("id, status")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !user) {
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
     const newStatus = user.status === "Active" ? "Suspended" : "Active";
 
-    db.prepare("UPDATE users SET status = ? WHERE id = ?").run(newStatus, req.params.id);
+    const { error: updateError } = await supabase
+      .from(table)
+      .update({ status: newStatus })
+      .eq("id", id);
+
+    if (updateError) throw updateError;
 
     res.json({ success: true, message: `User ${newStatus.toLowerCase()}.`, data: { status: newStatus } });
   } catch (err) {
