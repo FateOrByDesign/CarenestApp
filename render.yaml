@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: carenest-admin
+    runtime: node
+    rootDir: Carenest_Admin_Portal
+    buildCommand: npm install && npm run build && cd backend && npm install
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

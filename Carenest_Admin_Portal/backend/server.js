@@ -31,6 +31,17 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+// Serve React frontend in production
+const path = require("path");
+const clientBuildPath = path.join(__dirname, "..", "build");
+
+app.use(express.static(clientBuildPath));
+
+// Any route not matching /api/* serves the React app
+app.get(/^(?!\/api).*/, (req, res) => {
+  res.sendFile(path.join(clientBuildPath, "index.html"));
+});
+
 // Error handler (must be last)
 app.use(errorHandler);
 
