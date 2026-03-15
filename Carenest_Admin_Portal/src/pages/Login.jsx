@@ -18,6 +18,7 @@ import {
   VisibilityOff,
 } from "@mui/icons-material";
 import AdminImg from "../assets/hackerPic2.png";
+import API_BASE from "../services/api";
 
 
 function Login() {
@@ -35,7 +36,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5001/api/auth/login", {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
