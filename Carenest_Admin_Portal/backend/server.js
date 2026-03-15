@@ -8,15 +8,15 @@ const caregiverRoutes = require("./routes/caregivers");
 const userRoutes = require("./routes/users");
 const bookingRoutes = require("./routes/bookings");
 const errorHandler = require("./middleware/errorHandler");
-const initDatabase = require("./config/initDb");
-
-// Initialize database (creates tables + seeds if empty)
-initDatabase();
 
 const app = express();
 
 // Middleware
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(",")
+  : ["http://localhost:3000"];
+
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 
 // Routes
