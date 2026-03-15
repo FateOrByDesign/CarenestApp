@@ -39,13 +39,7 @@ import {
   ConfirmationNumber,
 } from "@mui/icons-material";
 import Navbar from "../components/Navbar";
-
-const API_BASE = "http://localhost:5001/api";
-
-const getAuthHeaders = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+import API_BASE, { getAuthHeaders } from "../services/api";
 
 const getStatusChipProps = (status) => {
   switch (status) {

@@ -38,13 +38,7 @@ import {
   CheckCircle,
 } from "@mui/icons-material";
 import Navbar from "../components/Navbar";
-
-const API_BASE = "http://localhost:5001/api";
-
-const getAuthHeaders = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+import API_BASE, { getAuthHeaders } from "../services/api";
 
 const getStatusChipProps = (status) => {
   switch (status) {
@@ -118,6 +112,7 @@ function Users() {
       const res = await fetch(`${API_BASE}/users/${selectedUser.id}/status`, {
         method: "PATCH",
         headers: getAuthHeaders(),
+        body: JSON.stringify({ role: selectedUser.role }),
       });
       const data = await res.json();
       if (data.success) {
