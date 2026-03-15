@@ -1,6 +1,5 @@
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const db = require("../config/db");
+const supabase = require("../config/db");
 
 exports.login = async (req, res, next) => {
   try {
@@ -10,20 +9,29 @@ exports.login = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Email and password are required." });
     }
 
-    const admin = db.prepare("SELECT * FROM admins WHERE email = ?").get(email);
+    // Authenticate via Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (!admin) {
+    if (authError) {
       return res.status(401).json({ success: false, message: "Invalid email or password." });
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password_hash);
+    // Check if user is an admin
+    const { data: admin, error: adminError } = await supabase
+      .from("admins")
+      .select("*")
+      .eq("auth_id", authData.user.id)
+      .single();
 
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: "Invalid email or password." });
+    if (adminError || !admin) {
+      return res.status(403).json({ success: false, message: "You are not authorized as an admin." });
     }
 
     const token = jwt.sign(
-      { id: admin.id, email: admin.email, role: admin.role },
+      { id: admin.id, email: admin.email, role: admin.role, auth_id: admin.auth_id },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -46,21 +54,43 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Name, email, and password are required." });
     }
 
-    const existing = db.prepare("SELECT id FROM admins WHERE email = ?").get(email);
+    // Check if admin already exists
+    const { data: existing } = await supabase
+      .from("admins")
+      .select("id")
+      .eq("email", email)
+      .single();
 
     if (existing) {
       return res.status(409).json({ success: false, message: "Email already registered." });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const password_hash = await bcrypt.hash(password, salt);
+    // Create Supabase Auth user
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
 
-    const result = db.prepare(
-      "INSERT INTO admins (name, email, password_hash, role) VALUES (?, ?, ?, ?)"
-    ).run(name, email, password_hash, role || "admin");
+    if (authError) {
+      return res.status(400).json({ success: false, message: authError.message });
+    }
+
+    // Insert into admins table
+    const { data: admin, error: insertError } = await supabase
+      .from("admins")
+      .insert({ auth_id: authData.user.id, name, email, role: role || "admin" })
+      .select()
+      .single();
+
+    if (insertError) {
+      // Cleanup: delete the auth user if admin insert fails
+      await supabase.auth.admin.deleteUser(authData.user.id);
+      return res.status(500).json({ success: false, message: "Failed to create admin account." });
+    }
 
     const token = jwt.sign(
-      { id: result.lastInsertRowid, email, role: role || "admin" },
+      { id: admin.id, email: admin.email, role: admin.role, auth_id: admin.auth_id },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -68,7 +98,7 @@ exports.register = async (req, res, next) => {
     res.status(201).json({
       success: true,
       token,
-      admin: { id: result.lastInsertRowid, name, email, role: role || "admin" },
+      admin: { id: admin.id, name: admin.name, email: admin.email, role: admin.role },
     });
   } catch (err) {
     next(err);
