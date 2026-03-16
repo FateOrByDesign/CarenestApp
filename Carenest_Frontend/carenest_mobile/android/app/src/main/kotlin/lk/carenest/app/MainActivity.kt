@@ -1,4 +1,4 @@
-package com.example.carenest_mobile
+package lk.carenest.app
 
 import io.flutter.embedding.android.FlutterActivity
 

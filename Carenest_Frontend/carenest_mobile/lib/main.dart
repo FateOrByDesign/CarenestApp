@@ -13,6 +13,8 @@ import 'screens/patient/carereceiver_dashboard_page.dart';
 import 'screens/patient/patient_details.dart';
 import 'screens/patient/request_caregiver.dart';
 import 'screens/patient/patient_notification_page.dart';
+import 'screens/patient/search_caregiver_page.dart';
+import 'screens/patient/patient_review_page.dart';
 import 'screens/caregiver/caregiver_job_page.dart';
 // caregiver screens
 import 'screens/caregiver/caregiver_register_page.dart';
@@ -67,6 +69,8 @@ class CareNestApp extends StatelessWidget {
         '/patient_details': (context) => const PatientDetailsPage(),
         '/patient_request-caregiver': (context) => const RequestCarePage(),
         '/patient_notifications': (context) => const PatientNotificationsPage(),
+        '/caregiver_search': (context) => const CaregiverSearchPage(),
+        '/patient_review': (context) => const PatientReviewPage(),
 
         // --- Caregiver Routes ---
         '/caregiver_register': (context) => const RegisterCaregiverScreen(),

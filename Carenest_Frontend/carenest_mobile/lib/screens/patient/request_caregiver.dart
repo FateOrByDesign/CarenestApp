@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/app_theme.dart';
 import 'package:carenest_mobileapp/widgets/carereceiver_navigationbar_mobile.dart';
 
@@ -14,14 +15,23 @@ class _RequestCarePageState extends State<RequestCarePage> {
   DateTime? selectedDate;
   TimeOfDay? startTime;
   TimeOfDay? endTime;
+  bool _isSubmitting = false;
+  int? _caregiverId;
 
-  //final TextEditingController durationController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
   final TextEditingController notesController = TextEditingController();
 
   final List<String> serviceTypes = ['Home care', 'Hospital Care'];
 
-  //Date picker
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args != null && _caregiverId == null) {
+      _caregiverId = args as int;
+    }
+  }
+
   Future<void> pickDate() async {
     DateTime? date = await showDatePicker(
       context: context,
@@ -34,7 +44,6 @@ class _RequestCarePageState extends State<RequestCarePage> {
     }
   }
 
-  //Start time picker
   Future<void> pickStartTime() async {
     TimeOfDay? time = await showTimePicker(
       context: context,
@@ -45,7 +54,6 @@ class _RequestCarePageState extends State<RequestCarePage> {
     }
   }
 
-  //End time picker
   Future<void> pickEndTime() async {
     TimeOfDay? time = await showTimePicker(
       context: context,
@@ -56,7 +64,6 @@ class _RequestCarePageState extends State<RequestCarePage> {
     }
   }
 
-  //Toggle button used for Date and Time selection
   Widget buildDateTimeField({
     required String label,
     required String value,
@@ -64,19 +71,18 @@ class _RequestCarePageState extends State<RequestCarePage> {
     IconData? icon,
   }) {
     return TextFormField(
-      readOnly: true, // prevents keyboard from showing
-      onTap: onTap, // open picker
+      readOnly: true,
+      onTap: onTap,
       style: AppTheme.bodyText.copyWith(color: AppTheme.textDark),
       decoration: InputDecoration(
-        hintText: value.isEmpty ? 'Select' : value, //New adding
+        hintText: value.isEmpty ? 'Select' : value,
         suffixIcon: icon != null ? Icon(icon, color: AppTheme.primary) : null,
       ),
       controller: TextEditingController(text: value),
     );
   }
 
-  //Submit request
-  void submitRequest() {
+  void submitRequest() async {
     if (serviceType == null ||
         selectedDate == null ||
         startTime == null ||
@@ -88,10 +94,87 @@ class _RequestCarePageState extends State<RequestCarePage> {
       return;
     }
 
-    // Placeholder for API call
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Request submitted!')));
+    if (_caregiverId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No caregiver selected. Please go back and select a caregiver.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+      final uid = supabase.auth.currentUser!.id;
+
+      // Get patient ID
+      final patient = await supabase
+          .from('patient_profiles')
+          .select('id')
+          .eq('auth_id', uid)
+          .single();
+      final patientId = patient['id'];
+
+      final dateStr = '${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}';
+      final startStr = '${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}:00';
+      final endStr = '${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}:00';
+      final timeSlot = '${startTime!.format(context)} - ${endTime!.format(context)}';
+
+      // Create booking
+      await supabase.from('bookings').insert({
+        'patient_id': patientId,
+        'caregiver_id': _caregiverId,
+        'date': dateStr,
+        'start_time': startStr,
+        'end_time': endStr,
+        'time_slot': timeSlot,
+        'service_type': serviceType,
+        'location': locationController.text,
+        'description': notesController.text,
+        'status': 'Pending',
+      });
+
+      // Send notification to caregiver
+      final caregiver = await supabase
+          .from('caregiver_profiles')
+          .select('auth_id')
+          .eq('id', _caregiverId!)
+          .single();
+
+      final now = DateTime.now();
+      await supabase.from('notifications').insert({
+        'user_auth_id': caregiver['auth_id'],
+        'title': 'New Care Request',
+        'description': 'You have a new $serviceType request for $dateStr',
+        'type': 'booking',
+        'date': '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+        'time': '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:00',
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Care request submitted!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to submit: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   Widget buildCard({
@@ -128,9 +211,6 @@ class _RequestCarePageState extends State<RequestCarePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
-
-      //currentIndex: CareReceiverNavigationBarMobile.findCareIndex,
-      //child: Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.primary,
         elevation: 0,
@@ -149,7 +229,6 @@ class _RequestCarePageState extends State<RequestCarePage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Service Type
             buildCard(
               icon: Icons.medical_services,
               title: 'Service Type',
@@ -157,12 +236,7 @@ class _RequestCarePageState extends State<RequestCarePage> {
                 value: serviceType,
                 hint: const Text('Select service type'),
                 items: serviceTypes
-                    .map(
-                      (service) => DropdownMenuItem(
-                        value: service,
-                        child: Text(service),
-                      ),
-                    )
+                    .map((service) => DropdownMenuItem(value: service, child: Text(service)))
                     .toList(),
                 onChanged: (value) => setState(() => serviceType = value),
                 decoration: const InputDecoration(hintText: 'Select status'),
@@ -170,7 +244,6 @@ class _RequestCarePageState extends State<RequestCarePage> {
             ),
             const SizedBox(height: 16),
 
-            //Date
             buildCard(
               icon: Icons.calendar_today,
               title: 'Select Date',
@@ -185,7 +258,6 @@ class _RequestCarePageState extends State<RequestCarePage> {
             ),
             const SizedBox(height: 16),
 
-            //Time
             buildCard(
               icon: Icons.access_time,
               title: 'Select Time',
@@ -194,9 +266,7 @@ class _RequestCarePageState extends State<RequestCarePage> {
                   Expanded(
                     child: buildDateTimeField(
                       label: 'Start Time',
-                      value: startTime == null
-                          ? ''
-                          : startTime!.format(context),
+                      value: startTime == null ? '' : startTime!.format(context),
                       onTap: pickStartTime,
                       icon: Icons.access_time,
                     ),
@@ -215,11 +285,9 @@ class _RequestCarePageState extends State<RequestCarePage> {
             ),
             const SizedBox(height: 16),
 
-            // Location Card
             buildCard(
               icon: Icons.location_on,
               title: 'Location',
-              //child: Column(
               child: TextFormField(
                 controller: locationController,
                 decoration: const InputDecoration(hintText: 'Enter location'),
@@ -228,30 +296,30 @@ class _RequestCarePageState extends State<RequestCarePage> {
 
             const SizedBox(height: 16),
 
-            // Notes Card
             buildCard(
               icon: Icons.note_alt,
               title: 'Additional Notes',
               child: TextFormField(
                 controller: notesController,
                 maxLines: 5,
-                decoration: const InputDecoration(
-                  hintText: 'Enter additional notes',
-                ),
+                decoration: const InputDecoration(hintText: 'Enter additional notes'),
               ),
             ),
             const SizedBox(height: 30),
 
-            // Request Care Button
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                ),
-                onPressed: submitRequest,
-                child: const Text('Request'),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
+                onPressed: _isSubmitting ? null : submitRequest,
+                child: _isSubmitting
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Text('Request'),
               ),
             ),
             const SizedBox(height: 16),
@@ -259,10 +327,7 @@ class _RequestCarePageState extends State<RequestCarePage> {
         ),
       ),
 
-      //New navigation bar
-      bottomNavigationBar: const CareReceiverNavigationBarMobile(
-        currentIndex: 1,
-      ),
+      bottomNavigationBar: const CareReceiverNavigationBarMobile(currentIndex: 1),
     );
   }
 }

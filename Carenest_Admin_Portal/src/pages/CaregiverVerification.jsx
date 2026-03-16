@@ -520,39 +520,64 @@ function CaregiverVerification() {
               >
                 Uploaded Documents
               </Typography>
-              <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mb: 3 }}>
+              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 3 }}>
                 {[
                   { label: "NIC Front", file: selectedCaregiver.doc_nic_front },
                   { label: "NIC Back", file: selectedCaregiver.doc_nic_back },
                   { label: "Certificate", file: selectedCaregiver.doc_certificate },
-                ].map((doc) => (
-                  <Box
-                    key={doc.label}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                      px: 2,
-                      py: 1.2,
-                      border: "1px solid #e0e0e0",
-                      borderRadius: "10px",
-                      bgcolor: "#fafbfc",
-                      cursor: "pointer",
-                      transition: "all 0.15s",
-                      "&:hover": { borderColor: "#1565c0", bgcolor: "#f0f6ff" },
-                    }}
-                  >
-                    <Description sx={{ fontSize: 18, color: "#1565c0" }} />
-                    <Box>
-                      <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#333" }}>
-                        {doc.label}
-                      </Typography>
-                      <Typography sx={{ fontSize: "0.7rem", color: "#999" }}>
-                        {doc.file}
-                      </Typography>
+                ].map((doc) => {
+                  if (!doc.file) return null;
+                  const isPdf = doc.file.toLowerCase().includes(".pdf");
+                  return (
+                    <Box
+                      key={doc.label}
+                      sx={{
+                        width: 180,
+                        border: "1px solid #e0e0e0",
+                        borderRadius: "12px",
+                        bgcolor: "#fafbfc",
+                        overflow: "hidden",
+                        transition: "all 0.15s",
+                        "&:hover": { borderColor: "#1565c0", boxShadow: "0 2px 12px rgba(21,101,192,0.12)" },
+                      }}
+                    >
+                      <Box
+                        component="a"
+                        href={doc.file}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ textDecoration: "none", display: "block" }}
+                      >
+                        {isPdf ? (
+                          <Box sx={{ height: 130, display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "#f0f4f8" }}>
+                            <Description sx={{ fontSize: 48, color: "#1565c0" }} />
+                          </Box>
+                        ) : (
+                          <Box
+                            component="img"
+                            src={doc.file}
+                            alt={doc.label}
+                            sx={{
+                              width: "100%",
+                              height: 130,
+                              objectFit: "cover",
+                              display: "block",
+                              bgcolor: "#f0f4f8",
+                            }}
+                          />
+                        )}
+                        <Box sx={{ px: 1.5, py: 1 }}>
+                          <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#333" }}>
+                            {doc.label}
+                          </Typography>
+                          <Typography sx={{ fontSize: "0.68rem", color: "#1565c0" }}>
+                            Click to view full size
+                          </Typography>
+                        </Box>
+                      </Box>
                     </Box>
-                  </Box>
-                ))}
+                  );
+                })}
               </Box>
 
               {/* Reject Reason Field */}

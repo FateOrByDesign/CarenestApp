@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/app_theme.dart';
 import 'package:carenest_mobileapp/widgets/caregiver_navigationbar_mobile.dart';
 
 class UpdateCareStatusPage extends StatefulWidget {
-  final int visitId;
-  final String patientName;
-
-  const UpdateCareStatusPage({
-    Key? key,
-    required this.visitId,
-    required this.patientName,
-  }) : super(key: key);
+  const UpdateCareStatusPage({Key? key}) : super(key: key);
 
   @override
   State<UpdateCareStatusPage> createState() => _UpdateCareStatusPageState();
@@ -19,22 +13,89 @@ class UpdateCareStatusPage extends StatefulWidget {
 class _UpdateCareStatusPageState extends State<UpdateCareStatusPage> {
   String? selectedStatus;
   final TextEditingController notesController = TextEditingController();
-  //bool isLoading = false;
+  bool _isSubmitting = false;
+
+  int? _visitId;
+  String? _patientName;
 
   final List<String> statusList = ['In Progress', 'Completed'];
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map<String, dynamic> && _visitId == null) {
+      _visitId = args['visitId'] as int?;
+      _patientName = args['patientName'] as String?;
+    }
+  }
+
   void updateCareStatus() async {
     if (selectedStatus == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a status')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a status')),
+      );
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Care status updated successfully')),
-    );
-    Navigator.pop(context);
+    if (_visitId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No visit selected'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+
+      await supabase.from('bookings').update({
+        'status': selectedStatus,
+      }).eq('id', _visitId!);
+
+      // Send notification to patient
+      final booking = await supabase
+          .from('bookings')
+          .select('patient_id, date')
+          .eq('id', _visitId!)
+          .single();
+
+      final patient = await supabase
+          .from('patient_profiles')
+          .select('auth_id')
+          .eq('id', booking['patient_id'])
+          .single();
+
+      final now = DateTime.now();
+      await supabase.from('notifications').insert({
+        'user_auth_id': patient['auth_id'],
+        'title': 'Visit Status Updated',
+        'description': 'Your visit on ${booking['date']} has been marked as $selectedStatus',
+        'type': 'booking',
+        'related_booking': _visitId,
+        'date': '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+        'time': '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:00',
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Care status updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   Widget buildCard({
@@ -79,12 +140,9 @@ class _UpdateCareStatusPageState extends State<UpdateCareStatusPage> {
           'Update Care Status',
           style: AppTheme.headingMedium.copyWith(color: Colors.white),
         ),
-        //centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context); // go back to previous screen
-          },
+          onPressed: () => Navigator.pop(context),
         ),
       ),
 
@@ -103,19 +161,15 @@ class _UpdateCareStatusPageState extends State<UpdateCareStatusPage> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.person,
-                      size: 38,
-                      color: AppTheme.textDark,
-                    ),
+                    const Icon(Icons.person, size: 38, color: AppTheme.textDark),
                     const SizedBox(width: 6),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(widget.patientName, style: AppTheme.headingLarge),
+                        Text(_patientName ?? 'Patient', style: AppTheme.headingLarge),
                         const SizedBox(height: 4),
                         Text(
-                          'Visit ID: ${widget.visitId}',
+                          'Visit ID: ${_visitId ?? '-'}',
                           style: AppTheme.bodyText,
                         ),
                       ],
@@ -127,7 +181,6 @@ class _UpdateCareStatusPageState extends State<UpdateCareStatusPage> {
 
             const SizedBox(height: 24),
 
-            // Care Status Card
             buildCard(
               icon: Icons.medical_services,
               title: 'Care Status',
@@ -144,7 +197,6 @@ class _UpdateCareStatusPageState extends State<UpdateCareStatusPage> {
 
             const SizedBox(height: 30),
 
-            //Care notes
             buildCard(
               icon: Icons.note_alt,
               title: 'Care Notes',
@@ -166,14 +218,19 @@ class _UpdateCareStatusPageState extends State<UpdateCareStatusPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
                 ),
-                onPressed: updateCareStatus,
-                child: const Text('Update'),
+                onPressed: _isSubmitting ? null : updateCareStatus,
+                child: _isSubmitting
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Text('Update'),
               ),
             ),
           ],
         ),
       ),
-      //New navigation bar
       bottomNavigationBar: const CaregiverNavigationBarMobile(currentIndex: 0),
     );
   }

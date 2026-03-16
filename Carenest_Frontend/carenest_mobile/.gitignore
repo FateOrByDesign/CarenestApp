@@ -43,4 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-lib/main.dart
+.flutter-plugins
+
+# Release signing
+android/key.properties
+*.jks
+*.keystore

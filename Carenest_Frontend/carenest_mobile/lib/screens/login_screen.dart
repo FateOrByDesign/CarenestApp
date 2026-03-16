@@ -47,7 +47,14 @@ class _LoginScreenState extends State<LoginScreen> {
               .maybeSingle(); // maybeSingle returns null if nothing is found
 
           if (adminCheck != null && mounted) {
-            Navigator.pushReplacementNamed(context, '/admin_dashboard');
+            await supabase.auth.signOut();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Admin portal is available on the web only. Please use a browser.'),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 4),
+              ),
+            );
             return;
           }
 
@@ -169,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Image.asset(
-                    '../assets/images/logo_black.png',
+                    'assets/images/logo_black.png',
                     height: 100,
                     errorBuilder: (context, error, stack) {
                       return const Icon(
@@ -180,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                   Image.asset(
-                    '../assets/images/typo_black.png',
+                    'assets/images/typo_black.png',
                     height: 30,
                     errorBuilder: (context, error, stack) =>
                         const SizedBox(height: 30),
